@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Sessions', '', 'sessions', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="@{/admin}" href="/admin">Dashboard</a>
+</div>
+
+<main>
+    <section class="sessions-page" aria-labelledby="sessions-title" data-sessions-page>
+        <header class="sessions-header">
+            <div>
+                <h2 id="sessions-title">Sessions</h2>
+            </div>
+            <div class="sessions-total" aria-label="Session result count">
+                <span>Total records</span>
+                <strong th:text="${sessionPage.totalItems}">0</strong>
+            </div>
+        </header>
+
+        <section class="session-loading-state" hidden aria-label="Loading sessions" aria-live="polite">
+            <div></div>
+            <div></div>
+            <div></div>
+        </section>
+
+        <form class="session-filter-bar" method="get" th:action="@{/admin/sessions}" data-session-controls>
+            <div class="session-search-field">
+                <label for="session-search">Search</label>
+                <input id="session-search" name="q" type="search" th:value="${searchQuery}" placeholder="Session, driver, driver name, or vehicle" data-session-search>
+            </div>
+            <div class="session-filter-field">
+                <label for="session-driver">Driver id</label>
+                <input id="session-driver" name="driverId" type="text" th:value="${driverId}" placeholder="Any driver">
+            </div>
+            <div class="session-filter-field">
+                <label for="session-vehicle">Vehicle id</label>
+                <input id="session-vehicle" name="vehicleId" type="text" th:value="${vehicleId}" placeholder="Any vehicle">
+            </div>
+            <div class="session-filter-field">
+                <label for="session-validity">Validity</label>
+                <select id="session-validity" name="validity">
+                    <option value="">Any validity</option>
+                    <option value="VALID" th:selected="${validity != null && validity.name() == 'VALID'}">Valid</option>
+                    <option value="INVALID" th:selected="${validity != null && validity.name() == 'INVALID'}">Invalid</option>
+                </select>
+            </div>
+            <div class="session-filter-field">
+                <label for="session-sort">Sort</label>
+                <select id="session-sort" name="sort" data-session-sort>
+                    <option value="startTimestamp:desc" th:selected="${sortValue == 'startTimestamp:desc'}">Newest first</option>
+                    <option value="startTimestamp:asc" th:selected="${sortValue == 'startTimestamp:asc'}">Oldest first</option>
+                    <option value="finalScore:asc" th:selected="${sortValue == 'finalScore:asc'}">Score low-high</option>
+                    <option value="finalScore:desc" th:selected="${sortValue == 'finalScore:desc'}">Score high-low</option>
+                    <option value="totalDurationSeconds:desc" th:selected="${sortValue == 'totalDurationSeconds:desc'}">Duration high-low</option>
+                    <option value="totalDurationSeconds:asc" th:selected="${sortValue == 'totalDurationSeconds:asc'}">Duration low-high</option>
+                    <option value="totalDistanceKm:desc" th:selected="${sortValue == 'totalDistanceKm:desc'}">Distance high-low</option>
+                    <option value="totalDistanceKm:asc" th:selected="${sortValue == 'totalDistanceKm:asc'}">Distance low-high</option>
+                </select>
+            </div>
+            <input type="hidden" name="sortBy" th:value="${sortBy}" data-session-sort-by>
+            <input type="hidden" name="sortDirection" th:value="${sortDirection}" data-session-sort-direction>
+            <input type="hidden" name="size" th:value="${sessionPage.size}">
+            <button class="shell-button primary" type="submit">Apply</button>
+        </form>
+
+        <div class="session-active-filters"
+             th:if="${hasActiveSessionFilters}">
+            <a class="session-chip removable" th:if="${driverId != null}" th:href="@{/admin/sessions(q=${searchQuery},vehicleId=${vehicleId},validity=${validity},sortBy=${sortBy},sortDirection=${sortDirection},size=${sessionPage.size})}">
+                <span th:text="${'Driver: ' + driverId}">Driver</span>
+                <strong aria-hidden="true">x</strong>
+            </a>
+            <span class="session-chip" th:if="${vehicleId != null}" th:text="${'Vehicle: ' + vehicleId}">Vehicle</span>
+            <span class="session-chip" th:if="${validity != null}" th:text="${'Validity: ' + validity}">Validity</span>
+            <span class="session-chip" th:if="${!#strings.isEmpty(searchQuery)}" th:text="${'Search: ' + searchQuery}">Search</span>
+            <a class="session-chip removable" th:href="@{/admin/sessions}" href="/admin/sessions">
+                <span>Clear all</span>
+                <strong aria-hidden="true">x</strong>
+            </a>
+        </div>
+
+        <div class="session-summary-strip" th:if="${sessionPage.items != null && !sessionPage.items.isEmpty()}" data-session-summary>
+            <div><span>Visible</span><strong data-session-visible-count th:text="${sessionPage.items.size()}">0</strong></div>
+            <div><span>Valid</span><strong data-session-count="VALID">0</strong></div>
+            <div><span>Invalid</span><strong data-session-count="INVALID">0</strong></div>
+            <div><span>Rows</span><strong th:text="${sessionPage.totalItems}">0</strong></div>
+        </div>
+
+        <section class="session-table-panel" th:if="${sessionPage.items != null && !sessionPage.items.isEmpty()}">
+            <div class="session-table-wrap">
+                <table class="session-table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Session</th>
+                        <th scope="col">Driver / Vehicle</th>
+                        <th scope="col">Start / End</th>
+                        <th scope="col">Validity</th>
+                        <th scope="col">Score</th>
+                        <th scope="col">Duration</th>
+                        <th scope="col">Distance</th>
+                        <th scope="col">Events</th>
+                        <th scope="col">Escalations</th>
+                        <th scope="col">Uploaded</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody data-session-table-body>
+                    <tr th:each="sessionRecord : ${sessionPage.items}"
+                        data-session-row
+                        th:attr="data-session-id=${sessionRecord.sessionId},data-driver-id=${sessionRecord.driverId},data-driver-name=${sessionRecord.driverName},data-vehicle-id=${sessionRecord.vehicleId},data-validity=${sessionRecord.validity},data-score=${sessionRecord.finalScore},data-duration=${sessionRecord.totalDurationSeconds},data-events=${sessionRecord.totalEventCount},data-escalations=${sessionRecord.totalEscalationCount}">
+                        <td data-label="Session">
+                            <a class="session-id-link"
+                               th:href="@{/admin/sessions/{id}(id=${sessionRecord.sessionId},returnTo=${listReturnUrl})}"
+                               th:text="${sessionRecord.sessionId}">session-id</a>
+                        </td>
+                        <td data-label="Driver / Vehicle">
+                            <div class="session-subject">
+                                <strong th:if="${sessionRecord.driverName != null && !sessionRecord.driverName.isBlank()}" th:text="${sessionRecord.driverName}">Driver Name</strong>
+                                <a th:href="@{/admin/sessions(driverId=${sessionRecord.driverId})}" th:text="${sessionRecord.driverId}">driver-id</a>
+                                <span th:text="${'Vehicle ' + sessionRecord.vehicleId}">vehicle-id</span>
+                            </div>
+                        </td>
+                        <td data-label="Start / End">
+                            <div class="session-timepair">
+                                <time th:attr="data-epoch=${sessionRecord.startTimestamp}" th:text="${sessionRecord.startTimestamp}">start</time>
+                                <time th:attr="data-epoch=${sessionRecord.endTimestamp}" th:text="${sessionRecord.endTimestamp}">end</time>
+                            </div>
+                        </td>
+                        <td data-label="Validity">
+                            <span class="session-badge badge-validity"
+                                  th:classappend="${sessionRecord.validity != null && sessionRecord.validity.name() == 'VALID'} ? ' is-valid' : ' is-invalid'"
+                                  th:text="${sessionRecord.validity}">VALID</span>
+                        </td>
+                        <td data-label="Score">
+                            <div class="session-score" th:classappend="${sessionRecord.finalScore >= 80} ? ' score-good' : (${sessionRecord.finalScore >= 60} ? ' score-watch' : ' score-low')">
+                                <strong th:text="${#numbers.formatDecimal(sessionRecord.finalScore, 1, 1)}">0.0</strong>
+                                <span aria-hidden="true"><i th:style="${'width:' + sessionRecord.finalScore + '%'}"></i></span>
+                            </div>
+                        </td>
+                        <td data-label="Duration" th:attr="data-duration-label=${sessionRecord.totalDurationSeconds}" th:text="${sessionRecord.totalDurationSeconds + 's'}">0s</td>
+                        <td data-label="Distance" th:text="${#numbers.formatDecimal(sessionRecord.totalDistanceKm, 1, 1) + ' km'}">0.0 km</td>
+                        <td data-label="Events" th:text="${sessionRecord.totalEventCount}">0</td>
+                        <td data-label="Escalations" th:text="${sessionRecord.totalEscalationCount}">0</td>
+                        <td data-label="Uploaded">
+                            <div class="session-timepair">
+                                <time th:attr="data-epoch=${sessionRecord.uploadedAt}" th:text="${sessionRecord.uploadedAt}">uploaded</time>
+                            </div>
+                        </td>
+                        <td data-label="Action">
+                            <a class="shell-button compact"
+                               th:href="@{/admin/sessions/{id}(id=${sessionRecord.sessionId},returnTo=${listReturnUrl})}">Open</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <nav class="session-pagination" aria-label="Session pages" th:if="${sessionPage.totalPages > 1}">
+            <a class="shell-button"
+               th:classappend="${!sessionPage.hasPrevious()} ? ' is-disabled'"
+               th:href="@{/admin/sessions(page=${sessionPage.page - 1},size=${sessionPage.size},q=${searchQuery},driverId=${driverId},vehicleId=${vehicleId},validity=${validity},sortBy=${sortBy},sortDirection=${sortDirection})}">Previous</a>
+            <span th:text="${'Page ' + (sessionPage.page + 1) + ' of ' + sessionPage.totalPages}">Page 1 of 1</span>
+            <a class="shell-button"
+               th:classappend="${!sessionPage.hasNext()} ? ' is-disabled'"
+               th:href="@{/admin/sessions(page=${sessionPage.page + 1},size=${sessionPage.size},q=${searchQuery},driverId=${driverId},vehicleId=${vehicleId},validity=${validity},sortBy=${sortBy},sortDirection=${sortDirection})}">Next</a>
+        </nav>
+
+        <section class="session-state session-error" th:if="${sessionsError != null}">
+            <h3>Session history could not be loaded</h3>
+            <p th:text="${sessionsError}">Failed to load sessions.</p>
+            <a class="shell-button primary" th:href="@{/admin/sessions}" href="/admin/sessions">Retry</a>
+        </section>
+
+        <section class="session-state" hidden data-session-no-results>
+            <h3>No matching sessions</h3>
+            <p>Adjust the search term or remove an active filter.</p>
+        </section>
+
+        <section class="session-state"
+                 th:if="${sessionsError == null && (sessionPage.items == null || sessionPage.items.isEmpty())}">
+            <h3 th:text="${hasActiveSessionFilters ? 'No sessions match these filters' : 'No uploaded sessions yet'}">No uploaded sessions yet</h3>
+            <p th:text="${hasActiveSessionFilters ? 'Try a wider filter set or return to global browsing.' : 'Historical session summaries appear here after uploads are persisted.'}">Historical session summaries appear here after uploads.</p>
+        </section>
+    </section>
+</main>
+</body>
+</html>

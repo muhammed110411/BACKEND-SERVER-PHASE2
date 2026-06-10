@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Dashboard', '', 'dashboard', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions"></div>
+
+<main th:with="analytics=${dashboard.globalAnalytics}">
+    <section class="dashboard-page workbench-dashboard" aria-label="Post-session dashboard">
+        <section class="dashboard-kpi-grid" aria-label="Historical summary metrics">
+            <a class="kpi-card" th:href="@{/admin/drivers}" href="/admin/drivers">
+                <span class="kpi-label">Total Drivers</span>
+                <span class="kpi-value" th:text="${analytics != null ? analytics.totalDrivers : dashboard.totalDriverCount}">0</span>
+            </a>
+            <a class="kpi-card" th:href="@{/admin/vehicles}" href="/admin/vehicles">
+                <span class="kpi-label">Total Vehicles</span>
+                <span class="kpi-value" th:text="${analytics != null ? analytics.totalVehicles : dashboard.totalVehicleCount}">0</span>
+            </a>
+            <a class="kpi-card" th:href="@{/admin/sessions}" href="/admin/sessions">
+                <span class="kpi-label">Submitted Sessions</span>
+                <span class="kpi-value" th:text="${analytics != null ? analytics.totalSessions : dashboard.totalSessionCount}">0</span>
+            </a>
+            <a class="kpi-card" th:href="@{/admin/fleet-analytics}" href="/admin/fleet-analytics">
+                <span class="kpi-label">Average Final Score</span>
+                <span class="kpi-value" th:text="${analytics != null ? #numbers.formatDecimal(analytics.averageFinalScore, 1, 1) : '0.0'}">0.0</span>
+            </a>
+        </section>
+
+        <section class="dashboard-analytics-grid" aria-label="Submission analytics">
+            <article class="dashboard-panel chart-card trend-panel" aria-labelledby="score-by-date-title" data-expandable-chart data-chart-kind="score">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="score-by-date-title">Average Score by Submission Date</h2>
+                    <div class="panel-actions">
+                        <div class="chart-toggle" role="group" aria-label="Chart mode">
+                            <button class="chart-toggle-button is-active" type="button" data-chart-mode="bar" aria-pressed="true">Bar</button>
+                            <button class="chart-toggle-button" type="button" data-chart-mode="line" aria-pressed="false">Line</button>
+                        </div>
+                        <button class="panel-icon-button chart-close" type="button" data-chart-close aria-label="Minimize Average Score by Submission Date">X</button>
+                    </div>
+                </div>
+                <div class="workbench-chart score-chart" th:if="${analytics != null && analytics.scoreTrend != null && !analytics.scoreTrend.isEmpty()}" data-dashboard-score-chart>
+                    <div class="chart-y-axis" aria-hidden="true">
+                        <span>100</span>
+                        <span>75</span>
+                        <span>50</span>
+                        <span>25</span>
+                        <span>0</span>
+                    </div>
+                    <div class="chart-scroll" data-chart-scroll>
+                        <div class="chart-stage" data-chart-stage aria-label="Average final score by submitted session date" role="img">
+                            <span th:each="point : ${analytics.scoreTrend}"
+                                  data-score-point
+                                  th:data-timestamp="${point.timestamp}"
+                                  th:data-score="${point.averageScore}"
+                                  th:data-count="${point.sessionCount}"
+                                  th:data-session-id="${point.sessionId}"
+                                  th:data-driver-id="${point.driverId}"
+                                  th:data-driver-name="${point.driverName}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.scoreTrend == null || analytics.scoreTrend.isEmpty()}">
+                    No score trend data available.
+                </div>
+            </article>
+
+            <article class="dashboard-panel chart-card" aria-labelledby="event-mix-title" data-expandable-chart data-chart-kind="bar">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="event-mix-title">Event Mix</h2>
+                    <div class="panel-actions">
+                        <span class="panel-total" th:text="${analytics != null ? analytics.totalEventCount + ' events' : '0 events'}">0 events</span>
+                        <button class="panel-icon-button chart-close" type="button" data-chart-close aria-label="Minimize Event Mix">X</button>
+                    </div>
+                </div>
+                <div class="category-chart" th:if="${analytics != null && analytics.eventCounts != null && !analytics.eventCounts.isEmpty() && analytics.totalEventCount > 0}" data-dashboard-category-chart>
+                    <div class="chart-y-axis" aria-hidden="true"></div>
+                    <div class="chart-scroll" data-chart-scroll>
+                        <div class="chart-stage category-chart-stage" data-category-chart-stage aria-label="Event count by event type" role="img">
+                            <span th:each="event : ${analytics.eventCounts}"
+                                  th:if="${event.count > 0}"
+                                  data-category-point
+                                  th:data-label="${event.eventType}"
+                                  th:data-count="${event.count}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.eventCounts == null || analytics.eventCounts.isEmpty() || analytics.totalEventCount == 0}">
+                    No events recorded.
+                </div>
+            </article>
+
+            <article class="dashboard-panel chart-card" aria-labelledby="escalation-mix-title" data-expandable-chart data-chart-kind="bar">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="escalation-mix-title">Escalations</h2>
+                    <div class="panel-actions">
+                        <span class="panel-total warning" th:text="${analytics != null ? analytics.totalEscalationCount + ' escalations' : '0 escalations'}">0 escalations</span>
+                        <button class="panel-icon-button chart-close" type="button" data-chart-close aria-label="Minimize Escalations">X</button>
+                    </div>
+                </div>
+                <div class="category-chart warning-chart" th:if="${analytics != null && analytics.escalationCounts != null && !analytics.escalationCounts.isEmpty() && analytics.totalEscalationCount > 0}" data-dashboard-category-chart>
+                    <div class="chart-y-axis" aria-hidden="true"></div>
+                    <div class="chart-scroll" data-chart-scroll>
+                        <div class="chart-stage category-chart-stage" data-category-chart-stage aria-label="Escalation count by escalation type" role="img">
+                            <span th:each="escalation : ${analytics.escalationCounts}"
+                                  th:if="${escalation.count > 0}"
+                                  data-category-point
+                                  th:data-label="${escalation.escalationType}"
+                                  th:data-count="${escalation.count}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.escalationCounts == null || analytics.escalationCounts.isEmpty() || analytics.totalEscalationCount == 0}">
+                    No escalations recorded.
+                </div>
+            </article>
+        </section>
+
+        <section class="dashboard-secondary-grid" aria-label="Session summaries">
+            <article class="dashboard-panel compact-panel" aria-labelledby="session-outcome-title">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="session-outcome-title">Session Outcomes</h2>
+                </div>
+                <div class="summary-stack" th:if="${analytics != null}">
+                    <div class="summary-line">
+                        <span>Completed</span>
+                        <strong th:text="${analytics.completedSessionCount}">0</strong>
+                    </div>
+                    <div class="summary-line warning">
+                        <span>Aborted</span>
+                        <strong th:text="${analytics.abortedSessionCount}">0</strong>
+                    </div>
+                    <div class="summary-line success">
+                        <span>Valid</span>
+                        <strong th:text="${analytics.validSessionCount}">0</strong>
+                    </div>
+                    <div class="summary-line danger">
+                        <span>Invalid</span>
+                        <strong th:text="${analytics.invalidSessionCount}">0</strong>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="dashboard-inspection-grid" aria-label="Historical records">
+            <article class="dashboard-panel risk-panel" aria-labelledby="risk-drivers-title">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="risk-drivers-title">Highest-Risk Drivers</h2>
+                    <a class="panel-link" th:href="@{/admin/drivers}" href="/admin/drivers">Drivers</a>
+                </div>
+                <div class="risk-list" th:if="${!dashboard.recentDrivers.isEmpty()}">
+                    <a class="risk-row" th:each="driver : ${dashboard.recentDrivers}" th:href="@{/admin/drivers/{id}/analytics(id=${driver.driverId})}">
+                        <span class="risk-identity">
+                            <strong th:text="${driver.driverName}">Driver</strong>
+                            <small th:text="${driver.driverId}">driver-id</small>
+                        </span>
+                        <span class="risk-score">
+                            <strong th:text="${#numbers.formatDecimal(driver.longTermReliabilityScore, 1, 1)}">0.0</strong>
+                            <small>Reliability</small>
+                        </span>
+                        <span class="risk-score">
+                            <strong th:text="${driver.totalSessions}">0</strong>
+                            <small>Sessions</small>
+                        </span>
+                    </a>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${dashboard.recentDrivers.isEmpty()}">
+                    No driver records available.
+                </div>
+            </article>
+
+            <article class="dashboard-panel recent-sessions-panel" aria-labelledby="recent-sessions-title">
+                <div class="panel-header refined">
+                    <h2 class="panel-title" id="recent-sessions-title">Recent Sessions</h2>
+                    <a class="panel-link" th:href="@{/admin/sessions}" href="/admin/sessions">Sessions</a>
+                </div>
+                <div class="data-table-wrap recent-table-wrap" th:if="${!dashboard.recentSessions.isEmpty()}">
+                    <table class="data-table dashboard-table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Session ID</th>
+                            <th scope="col">Driver</th>
+                            <th scope="col">Vehicle</th>
+                            <th scope="col">Submitted</th>
+                            <th scope="col">Final Score</th>
+                            <th scope="col">Validity</th>
+                            <th scope="col">Events</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sessionRow : ${dashboard.recentSessions}">
+                            <td>
+                                <a class="entity-link session-id" th:href="@{/admin/sessions/{id}(id=${sessionRow.sessionId})}" th:text="${sessionRow.sessionId}">session</a>
+                            </td>
+                            <td th:text="${sessionRow.driverId}">driver</td>
+                            <td th:text="${sessionRow.vehicleId}">vehicle</td>
+                            <td>
+                                <time data-epoch-time th:attr="datetime=${sessionRow.uploadedAt}" th:text="${sessionRow.uploadedAt}">0</time>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(sessionRow.finalScore, 1, 1)}">0.0</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:classappend="${sessionRow.validity != null && sessionRow.validity.name() == 'VALID'} ? ' success' : ' danger'"
+                                      th:text="${sessionRow.validity}">VALID</span>
+                            </td>
+                            <td th:text="${sessionRow.totalEventCount}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${dashboard.recentSessions.isEmpty()}">
+                    No submitted sessions available.
+                </div>
+            </article>
+        </section>
+
+        <section class="dashboard-zero-state" th:if="${analytics != null && analytics.totalDrivers == 0 && analytics.totalVehicles == 0 && analytics.totalSessions == 0}">
+            <h2>No historical data yet</h2>
+        </section>
+    </section>
+</main>
+</body>
+</html>

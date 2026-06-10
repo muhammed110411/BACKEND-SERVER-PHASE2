@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Session Detail', '', 'sessions', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="${sessionReturnUrl}" href="/admin/sessions">Back to sessions</a>
+    <a class="shell-button"
+       th:if="${sessionDetail.hasSession() && sessionDetail.canViewDriver}"
+       th:href="@{/admin/drivers/{id}(id=${sessionDetail.session.driverId})}"
+       href="/admin/drivers">Driver Detail</a>
+    <a class="shell-button primary"
+       th:if="${sessionDetail.hasSession() && sessionDetail.canViewDriver}"
+       th:href="@{/admin/drivers/{id}/analytics(id=${sessionDetail.session.driverId})}"
+       href="/admin/drivers">Driver Analytics</a>
+</div>
+
+<main>
+    <section class="session-detail-loading" hidden aria-label="Loading session detail" aria-live="polite">
+        <div class="detail-skeleton hero"></div>
+        <div class="detail-skeleton-grid">
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+        </div>
+        <div class="detail-skeleton metadata"></div>
+    </section>
+
+    <section class="session-detail-page"
+             data-session-detail-page
+             aria-labelledby="session-detail-title"
+             th:if="${sessionDetail.hasSession() && !sessionDetail.hasError()}"
+             th:with="detailSession=${sessionDetail.session}">
+        <header class="detail-page-header">
+            <a class="detail-back-link" th:href="${sessionReturnUrl}" href="/admin/sessions">Back to Sessions</a>
+            <div>
+                <h2 id="session-detail-title">Session Detail</h2>
+                <p th:text="${detailSession.sessionId}">session-id</p>
+            </div>
+        </header>
+
+        <article class="session-detail-hero">
+            <div class="session-hero-copy">
+                <div class="session-hero-heading">
+                    <span class="session-hero-label">Session id</span>
+                    <h3 th:text="${detailSession.sessionId}">session-id</h3>
+                </div>
+
+                <div class="session-identity-grid" aria-label="Subject identifiers">
+                    <article class="session-identity-card" th:if="${sessionDetail.driverName != null && !sessionDetail.driverName.isBlank()}">
+                        <span>Driver name</span>
+                        <strong th:text="${sessionDetail.driverName}">Driver Name</strong>
+                    </article>
+                    <article class="session-identity-card">
+                        <span>Driver id</span>
+                        <strong th:text="${detailSession.driverId}">driver-id</strong>
+                    </article>
+                    <article class="session-identity-card">
+                        <span>Vehicle id</span>
+                        <strong th:text="${detailSession.vehicleId}">vehicle-id</strong>
+                    </article>
+                    <article class="session-identity-card">
+                        <span>Source client</span>
+                        <strong th:text="${sessionDetail.sourceClientDisplay}">Not provided</strong>
+                    </article>
+                </div>
+            </div>
+
+            <div class="session-score-feature" th:classappend="${sessionDetail.finalScoreBand}">
+                <span>Final score</span>
+                <strong th:text="${#numbers.formatDecimal(detailSession.finalScore, 1, 1)}">0.0</strong>
+                <div class="score-track wide" aria-hidden="true">
+                    <span th:style="${'width:' + detailSession.finalScore + '%'}"></span>
+                </div>
+                <div class="session-hero-badges" aria-label="Session validity summary">
+                    <div class="hero-badge-group">
+                        <span class="hero-badge-label">Validity</span>
+                        <span class="session-badge badge-validity"
+                              th:classappend="${sessionDetail.validityBadgeClass}"
+                              th:text="${detailSession.validity}">VALID</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <section class="session-detail-summary" aria-label="Session summary metrics">
+            <article class="session-detail-metric">
+                <span>Duration</span>
+                <strong th:attr="data-duration-label=${detailSession.totalDurationSeconds}" th:text="${detailSession.totalDurationSeconds + 's'}">0s</strong>
+            </article>
+            <article class="session-detail-metric">
+                <span>Distance</span>
+                <strong th:text="${#numbers.formatDecimal(detailSession.totalDistanceKm, 1, 1) + ' km'}">0.0 km</strong>
+            </article>
+            <article class="session-detail-metric">
+                <span>Events</span>
+                <strong th:text="${detailSession.totalEventCount}">0</strong>
+            </article>
+            <article class="session-detail-metric">
+                <span>Escalations</span>
+                <strong th:text="${detailSession.totalEscalationCount}">0</strong>
+            </article>
+            <article class="session-detail-metric">
+                <span>Uploaded</span>
+                <strong><time th:attr="data-epoch=${detailSession.uploadedAt}" th:text="${detailSession.uploadedAt}">uploaded</time></strong>
+            </article>
+            <article class="session-detail-metric">
+                <span>Processed</span>
+                <strong>
+                    <time th:if="${detailSession.processedAt != null}" th:attr="data-epoch=${detailSession.processedAt}" th:text="${detailSession.processedAt}">processed</time>
+                    <span th:if="${detailSession.processedAt == null}" th:text="${sessionDetail.processedAtFallbackLabel}">Not processed</span>
+                </strong>
+            </article>
+        </section>
+
+        <section class="session-detail-tabs content-panel" aria-label="Session detail sections">
+            <div class="session-tablist" role="tablist" aria-label="Session detail tabs">
+                <button class="session-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="session-tab-overview" id="session-tab-trigger-overview" data-session-tab-trigger="overview">Overview</button>
+                <button class="session-tab" type="button" role="tab" aria-selected="false" aria-controls="session-tab-events" id="session-tab-trigger-events" data-session-tab-trigger="events">Events <span th:text="${sessionDetail.eventCount}">0</span></button>
+                <button class="session-tab" type="button" role="tab" aria-selected="false" aria-controls="session-tab-escalations" id="session-tab-trigger-escalations" data-session-tab-trigger="escalations">Escalations <span th:text="${sessionDetail.escalationCount}">0</span></button>
+                <button class="session-tab" type="button" role="tab" aria-selected="false" aria-controls="session-tab-score" id="session-tab-trigger-score" data-session-tab-trigger="score">Score History <span th:text="${sessionDetail.scorePointCount}">0</span></button>
+                <button class="session-tab" type="button" role="tab" aria-selected="false" aria-controls="session-tab-anomalies" id="session-tab-trigger-anomalies" data-session-tab-trigger="anomalies">Anomaly Flags <span th:text="${sessionDetail.anomalyCount}">0</span></button>
+            </div>
+
+            <div class="session-tab-panels">
+                <section class="session-tab-panel is-active" id="session-tab-overview" role="tabpanel" aria-labelledby="session-tab-trigger-overview" data-session-tab-panel="overview">
+                    <div class="session-overview-grid">
+                        <article class="content-panel session-overview-card">
+                            <div class="panel-header">
+                                <div>
+                                    <h3 class="panel-title">Penalty totals</h3>
+                                </div>
+                            </div>
+                            <div class="session-penalty-grid">
+                                <div>
+                                    <span>Continuous penalty</span>
+                                    <strong th:text="${#numbers.formatDecimal(detailSession.totalContinuousPenalty, 1, 1)}">0.0</strong>
+                                </div>
+                                <div>
+                                    <span>Event penalty</span>
+                                    <strong th:text="${#numbers.formatDecimal(detailSession.totalEventPenalty, 1, 1)}">0.0</strong>
+                                </div>
+                                <div>
+                                    <span>Escalation penalty</span>
+                                    <strong th:text="${#numbers.formatDecimal(detailSession.totalEscalationPenalty, 1, 1)}">0.0</strong>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="content-panel session-overview-card">
+                            <div class="panel-header">
+                                <div>
+                                    <h3 class="panel-title">Session metadata</h3>
+                                </div>
+                            </div>
+                            <dl class="metadata-grid session-metadata-grid">
+                                <div>
+                                    <dt>Session id</dt>
+                                    <dd th:text="${detailSession.sessionId}">session-id</dd>
+                                </div>
+                                <div>
+                                    <dt>Driver id</dt>
+                                    <dd th:text="${detailSession.driverId}">driver-id</dd>
+                                </div>
+                                <div th:if="${sessionDetail.driverName != null && !sessionDetail.driverName.isBlank()}">
+                                    <dt>Driver name</dt>
+                                    <dd th:text="${sessionDetail.driverName}">Driver Name</dd>
+                                </div>
+                                <div>
+                                    <dt>Vehicle id</dt>
+                                    <dd th:text="${detailSession.vehicleId}">vehicle-id</dd>
+                                </div>
+                                <div>
+                                    <dt>Source client</dt>
+                                    <dd th:text="${sessionDetail.sourceClientDisplay}">Not provided</dd>
+                                </div>
+                                <div>
+                                    <dt>Started</dt>
+                                    <dd><time th:attr="data-epoch=${detailSession.startTimestamp}" th:text="${detailSession.startTimestamp}">start</time></dd>
+                                </div>
+                                <div>
+                                    <dt>Ended</dt>
+                                    <dd><time th:attr="data-epoch=${detailSession.endTimestamp}" th:text="${detailSession.endTimestamp}">end</time></dd>
+                                </div>
+                            </dl>
+                        </article>
+
+                        <article class="content-panel session-overview-card session-overview-chart-card">
+                            <div class="panel-header">
+                                <div>
+                                    <h3 class="panel-title" th:text="${sessionDetail.scoreChartLabel}">Score History</h3>
+                                </div>
+                                    <span class="panel-total" th:text="${sessionDetail.scorePointCount + ' points'}">0 points</span>
+                            </div>
+                            <div class="session-detail-chart" th:if="${sessionDetail.hasScoreHistory()}" data-session-score-chart>
+                                <div class="chart-stage" data-session-chart-stage></div>
+                                <div class="trend-readouts">
+                                    <span th:each="point : ${detailSession.scoreHistory}" data-session-score-point th:attr="data-score=${point.scoreValue},data-timestamp=${point.timestamp}">
+                                        <time th:attr="data-epoch=${point.timestamp}" th:text="${point.timestamp}">timestamp</time>
+                                        <strong th:text="${#numbers.formatDecimal(point.scoreValue, 1, 1)}">0.0</strong>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="empty-panel refined-empty" th:if="${!sessionDetail.hasScoreHistory()}" th:text="${sessionDetail.emptyScoreHistoryMessage}">
+                                No score history is available for this historical session.
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="session-tab-panel" id="session-tab-events" role="tabpanel" aria-labelledby="session-tab-trigger-events" data-session-tab-panel="events" hidden>
+                    <article class="content-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">Persisted events</h3>
+                            </div>
+                            <span class="panel-total" th:text="${detailSession.totalEventCount + ' events'}">0 events</span>
+                        </div>
+                        <div class="session-detail-table-wrap" th:if="${detailSession.events != null && !detailSession.events.isEmpty()}">
+                            <table class="session-detail-table">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Event id</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Timestamp</th>
+                                    <th scope="col">Severity</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="event : ${detailSession.events}">
+                                    <td data-label="Event id"><code th:text="${event.eventId}">event-id</code></td>
+                                    <td data-label="Type"><span class="session-inline-pill" th:text="${event.eventType}">HARSH_BRAKE</span></td>
+                                    <td data-label="Timestamp"><time th:attr="data-epoch=${event.timestamp}" th:text="${event.timestamp}">timestamp</time></td>
+                                    <td data-label="Severity"><span class="session-severity" th:text="${#numbers.formatDecimal(event.severity, 1, 2)}">0.00</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty-panel refined-empty" th:if="${detailSession.events == null || detailSession.events.isEmpty()}">
+                            No persisted events are attached to this historical session.
+                        </div>
+                    </article>
+                </section>
+
+                <section class="session-tab-panel" id="session-tab-escalations" role="tabpanel" aria-labelledby="session-tab-trigger-escalations" data-session-tab-panel="escalations" hidden>
+                    <article class="content-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">Persisted escalations</h3>
+                            </div>
+                            <span class="panel-total" th:text="${detailSession.totalEscalationCount + ' escalations'}">0 escalations</span>
+                        </div>
+                        <div class="session-detail-table-wrap" th:if="${detailSession.escalations != null && !detailSession.escalations.isEmpty()}">
+                            <table class="session-detail-table">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Escalation id</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Triggered at</th>
+                                    <th scope="col">Related event types</th>
+                                    <th scope="col">Severity multiplier</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="escalation : ${detailSession.escalations}">
+                                    <td data-label="Escalation id"><code th:text="${escalation.escalationId}">escalation-id</code></td>
+                                    <td data-label="Type"><span class="session-inline-pill" th:text="${escalation.escalationType}">MULTI_EVENT</span></td>
+                                    <td data-label="Triggered at"><time th:attr="data-epoch=${escalation.triggeredAt}" th:text="${escalation.triggeredAt}">timestamp</time></td>
+                                    <td data-label="Related event types">
+                                        <div class="session-chip-row" th:if="${escalation.relatedEventTypes != null && !escalation.relatedEventTypes.isEmpty()}">
+                                            <span class="session-inline-pill muted" th:each="eventType : ${escalation.relatedEventTypes}" th:text="${eventType}">EVENT_TYPE</span>
+                                        </div>
+                                        <span th:if="${escalation.relatedEventTypes == null || escalation.relatedEventTypes.isEmpty()}">None</span>
+                                    </td>
+                                    <td data-label="Severity multiplier"><span class="session-severity" th:text="${#numbers.formatDecimal(escalation.severityMultiplier, 1, 2) + 'x'}">0.00x</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="empty-panel refined-empty" th:if="${detailSession.escalations == null || detailSession.escalations.isEmpty()}">
+                            No persisted escalations are attached to this historical session.
+                        </div>
+                    </article>
+                </section>
+
+                <section class="session-tab-panel" id="session-tab-score" role="tabpanel" aria-labelledby="session-tab-trigger-score" data-session-tab-panel="score" hidden>
+                    <article class="content-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">Score history</h3>
+                            </div>
+                                    <span class="panel-total" th:text="${sessionDetail.scorePointCount + ' points'}">0 points</span>
+                            </div>
+                            <div class="session-score-history-panel" th:if="${sessionDetail.hasScoreHistory()}">
+                                <div class="session-detail-chart" data-session-score-chart>
+                                    <div class="chart-stage" data-session-chart-stage></div>
+                                    <div class="trend-readouts">
+                                    <span th:each="point : ${detailSession.scoreHistory}" data-session-score-point th:attr="data-score=${point.scoreValue},data-timestamp=${point.timestamp}">
+                                        <time th:attr="data-epoch=${point.timestamp}" th:text="${point.timestamp}">timestamp</time>
+                                        <strong th:text="${#numbers.formatDecimal(point.scoreValue, 1, 1)}">0.0</strong>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="session-detail-table-wrap">
+                                <table class="session-detail-table">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">Score value</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="point : ${detailSession.scoreHistory}">
+                                        <td data-label="Timestamp"><time th:attr="data-epoch=${point.timestamp}" th:text="${point.timestamp}">timestamp</time></td>
+                                        <td data-label="Score value"><span class="session-severity" th:text="${#numbers.formatDecimal(point.scoreValue, 1, 1)}">0.0</span></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="empty-panel refined-empty" th:if="${!sessionDetail.hasScoreHistory()}" th:text="${sessionDetail.emptyScoreHistoryMessage}">
+                            No score history is available for this historical session.
+                        </div>
+                    </article>
+                </section>
+
+                <section class="session-tab-panel" id="session-tab-anomalies" role="tabpanel" aria-labelledby="session-tab-trigger-anomalies" data-session-tab-panel="anomalies" hidden>
+                    <article class="content-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">Ingestion anomaly flags</h3>
+                            </div>
+                            <span class="panel-total warning" th:text="${sessionDetail.anomalyCount + ' flags'}">0 flags</span>
+                        </div>
+                        <div class="session-anomaly-list" th:if="${detailSession.anomalyFlags != null && !detailSession.anomalyFlags.isEmpty()}">
+                            <article class="session-anomaly-card"
+                                     th:each="flag : ${detailSession.anomalyFlags}"
+                                     th:classappend="${flag.blocking} ? ' is-blocking' : ' is-warning'">
+                                <div class="session-anomaly-header">
+                                    <div>
+                                        <p class="session-anomaly-code" th:text="${flag.code}">ANOMALY_CODE</p>
+                                        <h4 th:text="${flag.message}">Flag message</h4>
+                                    </div>
+                                    <div class="session-anomaly-badges">
+                                        <span class="session-badge badge-processing"
+                                              th:classappend="${flag.blocking} ? ' is-rejected' : ' is-warning'"
+                                              th:text="${flag.blocking ? 'BLOCKING' : 'NON-BLOCKING'}">BLOCKING</span>
+                                        <span class="session-inline-pill" th:text="${flag.severity}">WARNING</span>
+                                    </div>
+                                </div>
+                                <dl class="session-anomaly-meta">
+                                    <div>
+                                        <dt>Field</dt>
+                                        <dd th:text="${flag.fieldName != null && !flag.fieldName.isBlank() ? flag.fieldName : 'Not specified'}">fieldName</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Detected at</dt>
+                                        <dd><time th:attr="data-epoch=${flag.detectedAt}" th:text="${flag.detectedAt}">timestamp</time></dd>
+                                    </div>
+                                </dl>
+                            </article>
+                        </div>
+                        <div class="empty-panel refined-empty" th:if="${detailSession.anomalyFlags == null || detailSession.anomalyFlags.isEmpty()}">
+                            No anomaly flags were persisted for this historical session.
+                        </div>
+                    </article>
+                </section>
+            </div>
+        </section>
+
+        <section class="session-detail-shortcuts" aria-label="Session detail shortcuts">
+            <a class="shortcut-card" th:href="${sessionReturnUrl}" href="/admin/sessions">
+                <span>Return</span>
+                <strong>Back to Sessions</strong>
+            </a>
+            <a class="shortcut-card"
+               th:if="${sessionDetail.canViewDriver}"
+               th:href="@{/admin/sessions(driverId=${detailSession.driverId})}"
+               href="/admin/sessions">
+                <span>Filtered history</span>
+                <strong>Driver Sessions</strong>
+            </a>
+            <a class="shortcut-card"
+               th:if="${sessionDetail.canViewDriver}"
+               th:href="@{/admin/drivers/{id}/analytics(id=${detailSession.driverId})}"
+               href="/admin/drivers">
+                <span>Related context</span>
+                <strong>Driver Analytics</strong>
+            </a>
+        </section>
+    </section>
+
+    <section class="session-state session-error" th:if="${sessionDetail.hasError()}">
+        <h3>Session detail could not be loaded</h3>
+        <p th:text="${sessionDetail.errorMessage}">Failed to load session detail.</p>
+        <div class="session-state-actions">
+            <a class="shell-button primary" th:href="${sessionReturnUrl}" href="/admin/sessions">Back to Sessions</a>
+            <a class="shell-button" href="" onclick="window.location.reload(); return false;">Retry</a>
+        </div>
+    </section>
+
+    <section class="session-state" th:if="${!sessionDetail.hasSession() && !sessionDetail.hasError()}">
+        <h3>Session detail is unavailable</h3>
+        <p th:text="${sessionDetail.emptyStateMessage}">Historical session detail is not available for this record.</p>
+        <a class="shell-button primary" th:href="${sessionReturnUrl}" href="/admin/sessions">Back to Sessions</a>
+    </section>
+</main>
+</body>
+</html>

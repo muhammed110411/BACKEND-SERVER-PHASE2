@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${vehicleList.pageTitle}, '', 'vehicles', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions"></div>
+
+<main>
+    <section class="vehicles-page" aria-labelledby="vehicles-title" data-vehicles-page>
+        <header class="vehicles-hero">
+            <div>
+                <h2 id="vehicles-title">Vehicles</h2>
+            </div>
+            <div class="vehicles-hero-meter" aria-label="Vehicle count summary">
+                <span>Total matched</span>
+                <strong data-vehicle-total th:text="${vehicleList.totalVehicleCount}">0</strong>
+            </div>
+        </header>
+
+        <section class="vehicle-loading-state" hidden aria-label="Loading vehicles" aria-live="polite">
+            <div></div>
+            <div></div>
+            <div></div>
+        </section>
+
+        <form class="vehicle-control-bar" method="get" th:action="@{/admin/vehicles}" data-vehicle-controls>
+            <div class="vehicle-search-field">
+                <label for="vehicle-search">Search vehicles</label>
+                <input id="vehicle-search" name="search" type="search" th:value="${vehicleList.searchQuery}" placeholder="Search vehicle id or display name" data-vehicle-search>
+            </div>
+            <div class="vehicle-control-field">
+                <label for="vehicle-sort">Sort</label>
+                <select id="vehicle-sort" data-vehicle-sort>
+                    <option value="displayName:asc" th:selected="${vehicleList.sortBy == 'displayName' && vehicleList.sortDirection == 'asc'}">Display name A-Z</option>
+                    <option value="displayName:desc" th:selected="${vehicleList.sortBy == 'displayName' && vehicleList.sortDirection == 'desc'}">Display name Z-A</option>
+                    <option value="id:asc" th:selected="${vehicleList.sortBy == 'id' && vehicleList.sortDirection == 'asc'}">Vehicle id A-Z</option>
+                    <option value="id:desc" th:selected="${vehicleList.sortBy == 'id' && vehicleList.sortDirection == 'desc'}">Vehicle id Z-A</option>
+                </select>
+            </div>
+            <input type="hidden" name="sortBy" th:value="${vehicleList.sortBy}" data-vehicle-sort-by>
+            <input type="hidden" name="direction" th:value="${vehicleList.sortDirection}" data-vehicle-sort-direction>
+            <button class="shell-button primary" type="submit">Apply</button>
+        </form>
+
+        <section class="vehicle-summary-strip" th:if="${vehicleList.hasVehicles()}">
+            <div>
+                <span>Visible</span>
+                <strong data-vehicle-visible-count th:text="${vehicleList.visibleVehicleCount}">0</strong>
+            </div>
+        </section>
+
+        <section class="vehicle-table-panel" th:if="${vehicleList.hasVehicles()}">
+            <div class="vehicle-table-wrap">
+                <table class="vehicle-table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Vehicle</th>
+                        <th scope="col">Sessions</th>
+                        <th scope="col">Last used</th>
+                        <th scope="col">Most recent driver</th>
+                        <th scope="col">History</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <th:block th:each="vehicle : ${vehicleList.vehicles.items}">
+                        <tr data-vehicle-row
+                            tabindex="0"
+                            th:attr="data-vehicle-id=${vehicle.vehicleId},data-vehicle-name=${vehicle.displayName},data-sort-name=${vehicle.displayName != null ? #strings.toLowerCase(vehicle.displayName) : ''},data-sort-id=${vehicle.vehicleId != null ? #strings.toLowerCase(vehicle.vehicleId) : ''}">
+                            <td data-label="Vehicle">
+                                <div class="vehicle-identity-cell">
+                                    <span class="vehicle-monogram"
+                                          th:text="${vehicle.displayName != null && !vehicle.displayName.isBlank() ? #strings.substring(vehicle.displayName, 0, 1) : 'V'}">V</span>
+                                    <span class="vehicle-identity-copy">
+                                        <strong th:text="${vehicle.displayName}">Vehicle Name</strong>
+                                        <small th:text="${vehicle.vehicleId}">vehicle-id</small>
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="Sessions">
+                                <span class="vehicle-null-state" data-vehicle-session-count>Open history</span>
+                            </td>
+                            <td data-label="Last used">
+                                <span class="vehicle-null-state" data-vehicle-last-used>Not loaded</span>
+                            </td>
+                            <td data-label="Most recent driver">
+                                <span class="vehicle-null-state" data-vehicle-recent-driver>Not loaded</span>
+                            </td>
+                            <td data-label="History">
+                                <button class="vehicle-expand-button" type="button" data-vehicle-expand aria-expanded="false">Expand</button>
+                            </td>
+                        </tr>
+                        <tr class="vehicle-history-row" data-vehicle-history-row th:attr="data-history-for=${vehicle.vehicleId}" hidden>
+                            <td colspan="5">
+                                <div class="vehicle-history-panel" data-vehicle-history-panel>
+                                    <div class="vehicle-history-head">
+                                        <strong>Session history</strong>
+                                        <button class="vehicle-collapse-button" type="button" data-vehicle-collapse aria-label="Collapse vehicle history">X</button>
+                                    </div>
+                                    <p class="vehicle-history-empty">Loading...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="vehicle-state vehicle-error" th:if="${vehicleList.hasError()}">
+            <h3>Vehicle roster could not be loaded</h3>
+            <p th:text="${vehicleList.errorMessage}">Vehicle roster could not be loaded right now.</p>
+            <a class="shell-button primary" th:href="@{/admin/vehicles}" href="/admin/vehicles">Retry</a>
+        </section>
+
+        <section class="vehicle-state" hidden data-vehicle-no-results>
+            <h3>No matching vehicles</h3>
+            <p>Try a different vehicle id or display name.</p>
+        </section>
+
+        <section class="vehicle-state"
+                 th:if="${!vehicleList.hasError() && !vehicleList.hasVehicles()}">
+            <h3 th:text="${vehicleList.hasActiveFilters() ? 'No vehicles match these filters' : 'No managed vehicles yet'}">No managed vehicles yet</h3>
+            <p th:text="${vehicleList.emptyStateMessage}">No managed vehicles are available yet.</p>
+        </section>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${driverAnalytics.pageTitle}, '', 'drivers', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="@{/admin/drivers}" href="/admin/drivers">Back to drivers</a>
+    <a class="shell-button"
+       th:href="@{/admin/drivers/{id}(id=${driverAnalytics.driverId})}"
+       href="/admin/drivers">Driver detail</a>
+    <a class="shell-button primary"
+       th:href="@{/admin/sessions(driverId=${driverAnalytics.driverId})}"
+       href="/admin/sessions">Driver sessions</a>
+</div>
+
+<main th:with="analytics=${driverAnalytics.analytics},driver=${driverAnalytics.driverSummary}">
+    <section class="driver-analytics-loading" hidden aria-label="Loading driver analytics" aria-live="polite">
+        <div class="analytics-skeleton analytics-skeleton-hero"></div>
+        <div class="analytics-skeleton-grid">
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+        </div>
+        <div class="analytics-skeleton analytics-skeleton-chart"></div>
+    </section>
+
+    <section class="driver-analytics-page" aria-labelledby="driver-analytics-title" th:if="${!driverAnalytics.hasError}">
+        <header class="analytics-page-header">
+            <a class="detail-back-link" th:href="@{/admin/drivers}" href="/admin/drivers">Back to Drivers</a>
+            <div>
+                <p class="analytics-kicker">Dedicated driver analytics</p>
+                <h2 id="driver-analytics-title">Driver Analytics</h2>
+                <p th:text="${(driver != null ? driver.driverName + ' / ' : '') + driverAnalytics.driverId}">Driver / driver-id</p>
+            </div>
+        </header>
+
+        <article class="analytics-context-panel">
+            <div class="analytics-context-copy">
+                <p class="analytics-kicker">Analytical context</p>
+                <h3 th:text="${driver != null ? driver.driverName : 'Driver profile'}">Driver profile</h3>
+                <p th:text="${'Driver id ' + driverAnalytics.driverId + ' / ' + driverAnalytics.activeRangeLabel}">Driver id / All time</p>
+            </div>
+            <div class="analytics-context-metrics">
+                <div class="context-score">
+                    <span>Long-term reliability</span>
+                    <strong th:text="${analytics != null ? #numbers.formatDecimal(analytics.longTermReliabilityScore, 1, 1) : '0.0'}">0.0</strong>
+                    <span class="score-track wide" aria-hidden="true">
+                        <span th:if="${analytics != null}" th:style="${'width:' + analytics.longTermReliabilityScore + '%'}"></span>
+                        <span th:if="${analytics == null}" style="width:0%"></span>
+                    </span>
+                </div>
+                <div>
+                    <span>Total sessions</span>
+                    <strong th:text="${analytics != null ? analytics.totalSessions : 0}">0</strong>
+                </div>
+                <div>
+                    <span>Total distance</span>
+                    <strong th:text="${analytics != null ? #numbers.formatDecimal(analytics.totalDistanceKm, 1, 1) + ' km' : '0.0 km'}">0.0 km</strong>
+                </div>
+            </div>
+        </article>
+
+        <section class="driver-analytics-kpis" aria-label="Driver analytics KPI summary">
+            <article class="analytics-kpi-card score-health-card">
+                <span class="kpi-label">Average final score</span>
+                <strong th:text="${analytics != null ? #numbers.formatDecimal(analytics.averageFinalScore, 1, 1) : '0.0'}">0.0</strong>
+                <span th:text="${analytics != null ? analytics.completedSessionCount + ' completed sessions' : 'No completed sessions'}">0 completed sessions</span>
+            </article>
+            <article class="analytics-kpi-card">
+                <span class="kpi-label">Valid sessions</span>
+                <strong th:text="${analytics != null ? analytics.validSessionCount : 0}">0</strong>
+                <span th:if="${analytics != null && analytics.totalSessions > 0}"
+                      th:text="${#numbers.formatDecimal((analytics.validSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '% of sessions'}">0%</span>
+                <span th:if="${analytics == null || analytics.totalSessions == 0}">No session base</span>
+            </article>
+            <article class="analytics-kpi-card warning-card">
+                <span class="kpi-label">Invalid sessions</span>
+                <strong th:text="${analytics != null ? analytics.invalidSessionCount : 0}">0</strong>
+                <span th:if="${analytics != null && analytics.totalSessions > 0}"
+                      th:text="${#numbers.formatDecimal((analytics.invalidSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '% of sessions'}">0%</span>
+                <span th:if="${analytics == null || analytics.totalSessions == 0}">Trust signal pending</span>
+            </article>
+            <article class="analytics-kpi-card">
+                <span class="kpi-label">Total events</span>
+                <strong th:text="${analytics != null ? analytics.totalEventCount : 0}">0</strong>
+                <span>Grouped event aggregate</span>
+            </article>
+            <article class="analytics-kpi-card escalation-card">
+                <span class="kpi-label">Total escalations</span>
+                <strong th:text="${analytics != null ? analytics.totalEscalationCount : 0}">0</strong>
+                <span>Grouped escalation aggregate</span>
+            </article>
+        </section>
+
+        <section class="driver-analytics-main-grid" aria-label="Primary driver analytics charts">
+            <article class="dashboard-panel driver-score-trend-panel" aria-labelledby="driver-score-trend-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="driver-score-trend-title">Score Trend</h2>
+                    </div>
+                    <span class="panel-total" th:text="${analytics != null && analytics.scoreTrend != null ? analytics.scoreTrend.size() + ' days' : '0 days'}">0 days</span>
+                </div>
+                <div class="driver-line-chart"
+                     th:if="${analytics != null && analytics.scoreTrend != null && !analytics.scoreTrend.isEmpty()}"
+                     data-driver-score-chart
+                     aria-label="Driver score trend chart">
+                    <div class="chart-stage" data-chart-stage></div>
+                    <div class="chart-point-data" hidden>
+                        <span th:each="point : ${analytics.scoreTrend}"
+                              data-trend-point
+                              th:attr="data-score=${point.averageScore},data-count=${point.sessionCount},data-label=${point.timestamp}"></span>
+                    </div>
+                    <div class="trend-readouts" data-trend-readouts role="list" aria-label="Score trend daily values"></div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.scoreTrend == null || analytics.scoreTrend.isEmpty()}">
+                    No score trend days are available yet. Analytics will appear after session uploads.
+                </div>
+            </article>
+
+            <article class="dashboard-panel composition-panel" aria-labelledby="driver-composition-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="driver-composition-title">Session Composition</h2>
+                    </div>
+                </div>
+                <div class="analytics-composition" th:if="${analytics != null}">
+                    <div class="composition-ring"
+                         th:style="${analytics.totalSessions > 0 ? 'background: conic-gradient(#9ee7c0 0 ' + #numbers.formatDecimal((analytics.validSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '%, rgba(255,155,155,0.95) 0 100%)' : 'background: conic-gradient(rgba(180,202,226,0.18) 0 100%)'}"
+                         aria-hidden="true">
+                        <span th:text="${analytics.totalSessions}">0</span>
+                    </div>
+                    <div class="composition-legend">
+                        <div><span class="legend-dot success"></span><strong th:text="${analytics.validSessionCount}">0</strong><span>Valid</span></div>
+                        <div><span class="legend-dot danger"></span><strong th:text="${analytics.invalidSessionCount}">0</strong><span>Invalid</span></div>
+                        <div><span class="legend-dot info"></span><strong th:text="${analytics.completedSessionCount}">0</strong><span>Completed</span></div>
+                        <div><span class="legend-dot warning"></span><strong th:text="${analytics.abortedSessionCount}">0</strong><span>Aborted</span></div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="driver-analytics-secondary-grid" aria-label="Grouped driver analytics">
+            <article class="dashboard-panel mix-panel" aria-labelledby="driver-events-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="driver-events-title">Grouped Events</h2>
+                    </div>
+                    <span class="panel-total" th:text="${analytics != null ? analytics.totalEventCount + ' events' : '0 events'}">0 events</span>
+                </div>
+                <div class="ranked-bars driver-ranked-bars"
+                     th:if="${analytics != null && analytics.eventCounts != null && !analytics.eventCounts.isEmpty() && analytics.totalEventCount > 0}">
+                    <div class="ranked-row" th:each="event : ${analytics.eventCounts}">
+                        <div class="ranked-label">
+                            <span th:text="${event.eventType}">EVENT</span>
+                            <strong th:text="${event.count}">0</strong>
+                        </div>
+                        <div class="ranked-track" aria-hidden="true">
+                            <span class="ranked-fill"
+                                  th:style="${'width: ' + #numbers.formatDecimal((event.count * 100.0) / analytics.totalEventCount, 1, 0) + '%'}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.eventCounts == null || analytics.eventCounts.isEmpty() || analytics.totalEventCount == 0}">
+                    No grouped driver events are present yet.
+                </div>
+            </article>
+
+            <article class="dashboard-panel mix-panel" aria-labelledby="driver-escalations-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="driver-escalations-title">Grouped Escalations</h2>
+                    </div>
+                    <span class="panel-total warning" th:text="${analytics != null ? analytics.totalEscalationCount + ' escalations' : '0 escalations'}">0 escalations</span>
+                </div>
+                <div class="escalation-radial-list"
+                     th:if="${analytics != null && analytics.escalationCounts != null && !analytics.escalationCounts.isEmpty() && analytics.totalEscalationCount > 0}">
+                    <div class="escalation-radial-row" th:each="escalation : ${analytics.escalationCounts}">
+                        <span class="radial-meter"
+                              th:style="${'background: conic-gradient(#ffd394 0 ' + #numbers.formatDecimal((escalation.count * 100.0) / analytics.totalEscalationCount, 1, 0) + '%, rgba(180,202,226,0.13) 0 100%)'}"
+                              aria-hidden="true"></span>
+                        <span class="radial-label">
+                            <strong th:text="${escalation.escalationType}">ESCALATION</strong>
+                            <small th:text="${escalation.count + ' occurrences'}">0 occurrences</small>
+                        </span>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.escalationCounts == null || analytics.escalationCounts.isEmpty() || analytics.totalEscalationCount == 0}">
+                    No grouped driver escalations are present yet.
+                </div>
+            </article>
+
+            <article class="dashboard-panel compact-panel" aria-labelledby="driver-breakdown-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="driver-breakdown-title">Validity / Completion</h2>
+                    </div>
+                </div>
+                <div class="status-split two-by-two" th:if="${analytics != null}">
+                    <div>
+                        <span>Valid</span>
+                        <strong th:text="${analytics.validSessionCount}">0</strong>
+                    </div>
+                    <div>
+                        <span>Invalid</span>
+                        <strong th:text="${analytics.invalidSessionCount}">0</strong>
+                    </div>
+                    <div>
+                        <span>Completed</span>
+                        <strong th:text="${analytics.completedSessionCount}">0</strong>
+                    </div>
+                    <div>
+                        <span>Aborted</span>
+                        <strong th:text="${analytics.abortedSessionCount}">0</strong>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-session-shortcut" aria-labelledby="driver-session-shortcut-title">
+            <div>
+                <p class="analytics-kicker">Onward inspection</p>
+                <h2 id="driver-session-shortcut-title">Open this driver's sessions</h2>
+            </div>
+            <div class="session-shortcut-actions">
+                <a class="shell-button primary" th:href="@{/admin/sessions(driverId=${driverAnalytics.driverId})}" href="/admin/sessions">Open Driver Sessions</a>
+                <a class="shell-button" th:href="@{/admin/drivers/{id}(id=${driverAnalytics.driverId})}" href="/admin/drivers">Open Driver Detail</a>
+            </div>
+        </section>
+
+        <section class="dashboard-zero-state" th:if="${analytics != null && analytics.totalSessions == 0}">
+            <h2>No analytical data yet</h2>
+            <p th:text="${driverAnalytics.emptyStateMessage}">Analytics will appear after session uploads.</p>
+        </section>
+    </section>
+
+    <section class="drivers-state drivers-error" th:if="${driverAnalytics.hasError}">
+        <h2>Driver analytics could not be loaded</h2>
+        <p th:text="${driverAnalytics.errorMessage}">Failed to load this driver's analytics.</p>
+        <div class="session-shortcut-actions">
+            <a class="shell-button primary" th:href="@{/admin/drivers/{id}/analytics(id=${driverAnalytics.driverId})}" href="/admin/drivers">Retry</a>
+            <a class="shell-button" th:href="@{/admin/drivers}" href="/admin/drivers">Back to Drivers</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

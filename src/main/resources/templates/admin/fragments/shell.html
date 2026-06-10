@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="shell(pageTitle, pageSubtitle, activeRoute, contentFragment, actionsFragment)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}">
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}">
+    <title th:text="${pageTitle + ' | Phase 2 Admin'}">Phase 2 Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-shell.css}" href="/css/admin-shell.css">
+    <script defer th:src="@{/js/admin-shell.js}" src="/js/admin-shell.js"></script>
+</head>
+<body class="admin-app-page">
+<div class="admin-shell" data-admin-shell>
+    <button class="admin-sidebar-backdrop" type="button" aria-label="Close navigation" data-sidebar-backdrop></button>
+
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+        <div class="sidebar-brand">
+            <div class="brand-mark" aria-hidden="true">P2</div>
+            <div>
+                <p class="brand-title">Phase 2</p>
+                <p class="brand-kicker">Admin Control Panel</p>
+            </div>
+        </div>
+
+        <div class="sidebar-scroll">
+            <p class="nav-section-label" data-i18n="nav.operations">Operations</p>
+            <nav class="sidebar-nav" aria-label="Primary admin pages">
+                <a class="nav-item" th:classappend="${activeRoute == 'dashboard'} ? ' is-active'" th:aria-current="${activeRoute == 'dashboard'} ? 'page' : null" th:href="@{/admin}" href="/admin" title="Dashboard" data-nav-key="nav.dashboard">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M12 13l4-4"/><path d="M5 17h14"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+                </a>
+                <a class="nav-item" th:classappend="${activeRoute == 'drivers'} ? ' is-active'" th:aria-current="${activeRoute == 'drivers'} ? 'page' : null" th:href="@{/admin/drivers}" href="/admin/drivers" title="Drivers" data-nav-key="nav.drivers">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a3 3 0 0 0-2-2.8"/><path d="M16.5 3.5a4 4 0 0 1 0 7"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.drivers">Drivers</span>
+                </a>
+                <a class="nav-item" th:classappend="${activeRoute == 'sessions'} ? ' is-active'" th:aria-current="${activeRoute == 'sessions'} ? 'page' : null" th:href="@{/admin/sessions}" href="/admin/sessions" title="Sessions" data-nav-key="nav.sessions">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/><path d="M3 3l3 3"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.sessions">Sessions</span>
+                </a>
+                <a class="nav-item" th:classappend="${activeRoute == 'analytics'} ? ' is-active'" th:aria-current="${activeRoute == 'analytics'} ? 'page' : null" th:href="@{/admin/fleet-analytics}" href="/admin/fleet-analytics" title="Fleet Analytics" data-nav-key="nav.analytics">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.analytics">Fleet Analytics</span>
+                </a>
+                <a class="nav-item" th:classappend="${activeRoute == 'vehicles'} ? ' is-active'" th:aria-current="${activeRoute == 'vehicles'} ? 'page' : null" th:href="@{/admin/vehicles}" href="/admin/vehicles" title="Vehicles" data-nav-key="nav.vehicles">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><path d="M5 17h14l-1-6H6z"/><path d="M7 11l2-4h6l2 4"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.vehicles">Vehicles</span>
+                </a>
+                <a class="nav-item" th:classappend="${activeRoute == 'settings'} ? ' is-active'" th:aria-current="${activeRoute == 'settings'} ? 'page' : null" th:href="@{/admin/settings}" href="/admin/settings" title="Settings" data-nav-key="nav.settings">
+                    <span class="nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 3.4-.2-.1a1.7 1.7 0 0 0-1.9.3 1.7 1.7 0 0 0-.6 1.8H9a1.7 1.7 0 0 0-.6-1.8 1.7 1.7 0 0 0-1.9-.3l-.2.1-2-3.4.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 13.8V10a1.7 1.7 0 0 0 1.6-1.2 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-3.4.2.1a1.7 1.7 0 0 0 1.9-.3A1.7 1.7 0 0 0 9 1.5h6a1.7 1.7 0 0 0 .6 1.8 1.7 1.7 0 0 0 1.9.3l.2-.1 2 3.4-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10v3.8A1.7 1.7 0 0 0 19.4 15z"/></svg>
+                    </span>
+                    <span class="nav-label" data-i18n="nav.settings">Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="admin-identity">
+                <div class="admin-avatar" aria-hidden="true">AD</div>
+                <div>
+                    <p class="admin-identity-name" th:text="${adminUsername ?: 'Admin'}">Admin</p>
+                    <p class="admin-identity-role">ADMIN</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <section class="admin-main">
+        <header class="admin-topbar">
+            <button class="mobile-nav-trigger" type="button" aria-label="Open navigation" aria-expanded="false" data-sidebar-toggle>
+                <span aria-hidden="true">Menu</span>
+            </button>
+
+            <div class="route-heading">
+                <p class="route-eyebrow">Admin</p>
+                <h1 class="route-title" th:text="${pageTitle}">Dashboard</h1>
+                <p class="route-subtitle" th:if="${pageSubtitle != null && !#strings.isEmpty(pageSubtitle)}" th:text="${pageSubtitle}">Authenticated administration workspace</p>
+            </div>
+
+            <div class="route-actions" th:insert="${actionsFragment}">
+            </div>
+
+            <div class="profile-menu-wrap">
+                <button class="profile-trigger" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false" data-profile-trigger>
+                    <span aria-hidden="true">AD</span>
+                </button>
+                <div class="profile-menu" role="menu" data-profile-menu hidden>
+                    <a role="menuitem" th:href="@{/admin/profile}" href="/admin/profile">Profile</a>
+                    <form class="logout-form" method="post" th:action="@{/admin/logout}" action="/admin/logout">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" role="menuitem">Log out</button>
+                    </form>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-page-content" th:insert="${contentFragment}">
+        </main>
+    </section>
+</div>
+</body>
+</html>

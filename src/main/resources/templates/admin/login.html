@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Phase 2</title>
+    <link rel="stylesheet" th:href="@{/css/admin-login.css}" href="/css/admin-login.css">
+    <script defer th:src="@{/js/admin-login.js}" src="/js/admin-login.js"></script>
+</head>
+<body class="admin-auth-page">
+<main class="auth-shell" aria-labelledby="admin-login-title">
+    <section class="auth-card" aria-label="Admin login">
+        <p class="system-name">Phase 2</p>
+
+        <div class="auth-heading">
+            <h1 id="admin-login-title">Admin Login</h1>
+        </div>
+
+        <div
+                class="status-message server-status"
+                th:if="${login.errorMessage != null}"
+                role="alert"
+                aria-live="polite"
+        >
+            <span aria-hidden="true">!</span>
+            <p th:text="${login.errorMessage}">Invalid username or password.</p>
+        </div>
+
+        <div
+                id="form-error"
+                class="status-message client-status"
+                role="alert"
+                aria-live="polite"
+                hidden
+        >
+            <span aria-hidden="true">!</span>
+            <p>Please enter both your username and password.</p>
+        </div>
+
+        <form
+                class="login-form"
+                method="post"
+                th:action="@{${loginProcessingPath}}"
+                action="/admin/login"
+                novalidate
+                data-admin-login-form
+        >
+            <input
+                    type="hidden"
+                    th:if="${_csrf != null}"
+                    th:name="${_csrf.parameterName}"
+                    th:value="${_csrf.token}"
+            >
+
+            <div class="field-group">
+                <label for="username">Username</label>
+                <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        th:value="${login.username}"
+                        autocomplete="username"
+                        placeholder="Enter admin username"
+                        spellcheck="false"
+                        aria-describedby="username-error"
+                        data-username-input
+                >
+                <p id="username-error" class="field-error" data-username-error hidden>
+                    Username is required.
+                </p>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Password</label>
+                <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="Enter admin password"
+                        aria-describedby="password-error"
+                        data-password-input
+                >
+                <p id="password-error" class="field-error" data-password-error hidden>
+                    Password is required.
+                </p>
+            </div>
+
+            <button class="submit-button" type="submit" data-submit-button>
+                <span class="button-spinner" aria-hidden="true"></span>
+                <span data-submit-label>Sign In</span>
+            </button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

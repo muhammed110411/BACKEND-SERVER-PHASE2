@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${driverDetail.pageTitle}, '', 'drivers', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="@{/admin/drivers}" href="/admin/drivers">Back to drivers</a>
+    <a class="shell-button primary"
+       th:if="${driverDetail.hasDriver() && driverDetail.canViewAnalytics}"
+       th:href="@{/admin/drivers/{id}/analytics(id=${driverDetail.driver.driverId})}"
+       href="/admin/drivers">Open Analytics</a>
+</div>
+
+<main>
+    <section class="profile-toast profile-toast-success driver-created-toast"
+             th:if="${driverCreated}"
+             role="status"
+             aria-live="polite">
+        <span class="profile-toast-icon" aria-hidden="true">&#10003;</span>
+        <span>Driver account created. The new driver can now sign in from Android with the configured email and password.</span>
+    </section>
+
+    <section class="driver-detail-loading" hidden aria-label="Loading driver detail" aria-live="polite">
+        <div class="detail-skeleton hero"></div>
+        <div class="detail-skeleton-grid">
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+            <div class="detail-skeleton"></div>
+        </div>
+        <div class="detail-skeleton metadata"></div>
+    </section>
+
+    <section class="driver-detail-page" aria-labelledby="driver-detail-title" th:if="${driverDetail.hasDriver() && !driverDetail.hasError()}">
+        <header class="detail-page-header">
+            <a class="detail-back-link" th:href="@{/admin/drivers}" href="/admin/drivers">Back to Drivers</a>
+            <div>
+                <p class="detail-kicker">Administrative record</p>
+                <h2 id="driver-detail-title">Driver Detail</h2>
+                <p th:text="${driverDetail.driver.driverName + ' / ' + driverDetail.driver.driverId}">Driver Name / driver-id</p>
+            </div>
+        </header>
+
+        <article class="driver-detail-hero">
+            <div class="driver-hero-identity">
+                <span class="driver-detail-avatar" th:text="${driverDetail.driverInitials}" aria-hidden="true">DR</span>
+                <div class="driver-detail-name-block">
+                    <h3 th:text="${driverDetail.driver.driverName}">Driver Name</h3>
+                    <p class="driver-detail-id" th:text="${driverDetail.driver.driverId}">driver-id</p>
+                    <p class="driver-detail-email" th:text="${driverDetail.driver.email}">driver@example.com</p>
+                    <div class="driver-detail-badges" aria-label="Driver role">
+                        <span class="role-pill" th:text="${driverDetail.driver.role}">DRIVER</span>
+                        <span class="status-pill"
+                              th:classappend="${driverDetail.statusBadgeClass}"
+                              th:text="${driverDetail.driver.accountStatus}">ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="driver-score-feature" th:classappend="${driverDetail.scoreBand}">
+                <span>Long-term reliability</span>
+                <strong th:text="${#numbers.formatDecimal(driverDetail.driver.longTermReliabilityScore, 1, 1)}">0.0</strong>
+                <div class="score-track wide" aria-hidden="true">
+                    <span th:style="${'width:' + driverDetail.driver.longTermReliabilityScore + '%'}"></span>
+                </div>
+            </div>
+        </article>
+
+        <section class="driver-detail-summary" aria-label="Driver aggregate summary">
+            <article class="driver-detail-metric" th:classappend="${driverDetail.scoreBand}">
+                <span>Reliability score</span>
+                <strong th:text="${#numbers.formatDecimal(driverDetail.driver.longTermReliabilityScore, 1, 1)}">0.0</strong>
+            </article>
+            <article class="driver-detail-metric">
+                <span>Total sessions</span>
+                <strong th:text="${driverDetail.driver.totalSessions}">0</strong>
+            </article>
+            <article class="driver-detail-metric">
+                <span>Total distance</span>
+                <strong th:text="${#numbers.formatDecimal(driverDetail.driver.totalDistanceKm, 1, 1) + ' km'}">0.0 km</strong>
+            </article>
+        </section>
+
+        <section class="driver-detail-metadata content-panel" aria-labelledby="driver-metadata-title">
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title" id="driver-metadata-title">Administrative Metadata</h3>
+                </div>
+            </div>
+            <dl class="metadata-grid">
+                <div>
+                    <dt>Driver id</dt>
+                    <dd th:text="${driverDetail.driver.driverId}">driver-id</dd>
+                </div>
+                <div>
+                    <dt>Email</dt>
+                    <dd th:text="${driverDetail.driver.email}">driver@example.com</dd>
+                </div>
+                <div>
+                    <dt>Role</dt>
+                    <dd th:text="${driverDetail.driver.role}">DRIVER</dd>
+                </div>
+                <div>
+                    <dt>Account status</dt>
+                    <dd th:text="${driverDetail.driver.accountStatus}">ACTIVE</dd>
+                </div>
+                <div>
+                    <dt>Created</dt>
+                    <dd th:text="${driverDetail.createdAtDisplay}">Jan 1, 2026 00:00 UTC</dd>
+                </div>
+                <div>
+                    <dt>Updated</dt>
+                    <dd th:text="${driverDetail.updatedAtDisplay}">Jan 1, 2026 00:00 UTC</dd>
+                </div>
+                <div>
+                    <dt>Deactivated</dt>
+                    <dd th:text="${driverDetail.deactivatedAtDisplay}">Not deactivated</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="driver-detail-shortcuts" aria-label="Driver detail shortcuts">
+            <a class="shortcut-card"
+               th:if="${driverDetail.canViewAnalytics}"
+               th:href="@{/admin/drivers/{id}/analytics(id=${driverDetail.driver.driverId})}">
+                <span>Open Analytics</span>
+                <strong>Driver Analytics</strong>
+            </a>
+            <a class="shortcut-card"
+               th:if="${driverDetail.canViewSessions}"
+               th:href="@{/admin/sessions(driverId=${driverDetail.driver.driverId})}">
+                <span>Open Sessions</span>
+                <strong>Filtered sessions</strong>
+            </a>
+            <a class="shortcut-card" th:href="@{/admin/drivers}" href="/admin/drivers">
+                <span>Return</span>
+                <strong>Drivers</strong>
+            </a>
+        </section>
+    </section>
+
+    <section class="drivers-state drivers-error" th:if="${driverDetail.hasError()}">
+        <h2>Driver detail could not be loaded</h2>
+        <p th:text="${driverDetail.errorMessage}">Failed to load this driver record.</p>
+        <a class="shell-button primary" th:href="@{/admin/drivers}" href="/admin/drivers">Back to Drivers</a>
+    </section>
+
+    <section class="drivers-state" th:if="${!driverDetail.hasDriver() && !driverDetail.hasError()}">
+        <h2>Driver not found</h2>
+        <p th:text="${driverDetail.emptyStateMessage}">Driver record could not be found.</p>
+        <a class="shell-button primary" th:href="@{/admin/drivers}" href="/admin/drivers">Back to Drivers</a>
+    </section>
+</main>
+</body>
+</html>

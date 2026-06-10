@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Create Driver', '', 'drivers', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="@{/admin/drivers}" href="/admin/drivers">Back to drivers</a>
+</div>
+
+<main>
+    <section class="driver-create-page" aria-labelledby="driver-create-title">
+        <header class="drivers-hero driver-create-hero">
+            <div>
+                <p class="detail-kicker">Backend-owned identity</p>
+                <h2 id="driver-create-title">Create Driver</h2>
+                <p>Phase 2 creates the driver account, stores the credential hash, and keeps Android signup disabled.</p>
+            </div>
+            <div class="drivers-hero-meter" aria-label="Fixed driver role">
+                <span>Role</span>
+                <strong>DRIVER</strong>
+            </div>
+        </header>
+
+        <section class="driver-create-grid">
+            <article class="content-panel driver-create-card">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">Account Details</h3>
+                        <p class="panel-meta">Required fields use the same admin validation style as the control panel.</p>
+                    </div>
+                </div>
+
+                <form class="driver-create-form" method="post" th:action="@{/admin/drivers/new}" th:object="${driverForm}" autocomplete="off">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" th:field="*{accountStatus}">
+
+                    <div class="profile-form-validation" th:if="${#fields.hasGlobalErrors()}" role="alert">
+                        <span th:each="error : ${#fields.globalErrors()}" th:text="${error}">Driver could not be created.</span>
+                    </div>
+
+                    <div class="driver-create-field">
+                        <label class="profile-form-label" for="driver-name">Name</label>
+                        <input class="profile-input"
+                               th:classappend="${#fields.hasErrors('name')} ? ' is-invalid'"
+                               id="driver-name"
+                               type="text"
+                               th:field="*{name}"
+                               placeholder="Aylin Kaya"
+                               required>
+                        <p class="driver-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name is required.</p>
+                    </div>
+
+                    <div class="driver-create-field">
+                        <label class="profile-form-label" for="driver-email">Email</label>
+                        <input class="profile-input"
+                               th:classappend="${#fields.hasErrors('email')} ? ' is-invalid'"
+                               id="driver-email"
+                               type="email"
+                               th:field="*{email}"
+                               placeholder="driver@example.com"
+                               required>
+                        <p class="driver-field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Enter a valid email address.</p>
+                    </div>
+
+                    <div class="driver-create-field">
+                        <label class="profile-form-label" for="driver-password">Password</label>
+                        <input class="profile-input"
+                               th:classappend="${#fields.hasErrors('password')} ? ' is-invalid'"
+                               id="driver-password"
+                               type="password"
+                               th:field="*{password}"
+                               placeholder="Minimum 8 characters"
+                               required
+                               minlength="8"
+                               autocomplete="new-password">
+                        <p class="driver-field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password is required.</p>
+                    </div>
+
+                    <div class="driver-create-field">
+                        <label class="profile-form-label" for="driver-confirm-password">Confirm Password</label>
+                        <input class="profile-input"
+                               th:classappend="${#fields.hasErrors('confirmPassword')} ? ' is-invalid'"
+                               id="driver-confirm-password"
+                               type="password"
+                               th:field="*{confirmPassword}"
+                               placeholder="Repeat password"
+                               required
+                               minlength="8"
+                               autocomplete="new-password">
+                        <p class="driver-field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}">Password confirmation must match.</p>
+                    </div>
+
+                    <div class="driver-create-locked-field">
+                        <div>
+                            <label class="profile-form-label" for="driver-account-status">Account Status</label>
+                            <span class="status-pill success" id="driver-account-status" th:text="*{accountStatus}">ACTIVE</span>
+                            <p>New driver accounts start active so Android login works immediately after deployment.</p>
+                        </div>
+                        <p class="driver-field-error" th:if="${#fields.hasErrors('accountStatus')}" th:errors="*{accountStatus}">Account status is required.</p>
+                    </div>
+
+                    <div class="driver-create-locked-field">
+                        <div>
+                            <span class="profile-form-label">Role</span>
+                            <span class="role-pill">DRIVER</span>
+                            <p>Role is set server-side and cannot be changed from this driver form.</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-form-actions driver-create-actions">
+                        <button class="profile-submit-btn" type="submit">Create driver</button>
+                        <a class="shell-button" th:href="@{/admin/drivers}" href="/admin/drivers">Cancel</a>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="content-panel driver-create-card driver-create-policy" aria-label="Driver account policy">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">Creation Policy</h3>
+                        <p class="panel-meta">Phase 2 remains the only account authority.</p>
+                    </div>
+                </div>
+                <dl class="metadata-grid">
+                    <div>
+                        <dt>Role</dt>
+                        <dd>DRIVER only</dd>
+                    </div>
+                    <div>
+                        <dt>Initial score</dt>
+                        <dd>0.0</dd>
+                    </div>
+                    <div>
+                        <dt>Total sessions</dt>
+                        <dd>0</dd>
+                    </div>
+                    <div>
+                        <dt>Total distance</dt>
+                        <dd>0.0 km</dd>
+                    </div>
+                    <div>
+                        <dt>Credential storage</dt>
+                        <dd>BCrypt password hash</dd>
+                    </div>
+                </dl>
+            </aside>
+        </section>
+    </section>
+</main>
+</body>
+</html>

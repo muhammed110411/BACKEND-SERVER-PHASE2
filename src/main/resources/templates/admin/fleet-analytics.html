@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${fleetAnalytics.pageTitle}, '', 'analytics', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions"></div>
+
+<main th:with="analytics=${fleetAnalytics.globalAnalytics}">
+    <section class="fleet-analytics-loading" hidden aria-label="Loading fleet analytics" aria-live="polite">
+        <div class="analytics-skeleton analytics-skeleton-hero"></div>
+        <div class="fleet-analytics-skeleton-grid">
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+            <div class="analytics-skeleton"></div>
+        </div>
+        <div class="analytics-skeleton analytics-skeleton-chart"></div>
+    </section>
+
+    <section class="fleet-analytics-page" aria-labelledby="fleet-analytics-title" th:if="${!fleetAnalytics.hasError}">
+        <header class="fleet-analytics-hero">
+            <div class="fleet-analytics-hero-copy">
+                <h2 id="fleet-analytics-title">Fleet Analytics</h2>
+            </div>
+            <div class="fleet-analytics-hero-meta">
+                <div>
+                    <span>Sessions in scope</span>
+                    <strong th:text="${analytics != null ? analytics.totalSessions : 0}">0</strong>
+                </div>
+                <div>
+                    <span>Average final score</span>
+                    <strong th:text="${analytics != null ? #numbers.formatDecimal(analytics.averageFinalScore, 1, 1) : '0.0'}">0.0</strong>
+                </div>
+                <div>
+                    <span>Drivers</span>
+                    <strong th:text="${analytics != null ? analytics.totalDrivers : 0}">0</strong>
+                </div>
+                <div>
+                    <span>Vehicles</span>
+                    <strong th:text="${analytics != null ? analytics.totalVehicles : 0}">0</strong>
+                </div>
+            </div>
+        </header>
+
+        <section class="fleet-kpi-grid" aria-label="Primary fleet metrics">
+            <article class="kpi-card kpi-card-primary">
+                <span class="kpi-label">Total Event Count</span>
+                <span class="kpi-value" th:text="${analytics != null ? analytics.totalEventCount : 0}">0</span>
+                <span class="kpi-note" th:text="${fleetAnalytics.dominantEventLabel != null ? #strings.replace(fleetAnalytics.dominantEventLabel, '_', ' ') : 'No event leader'}">No event leader</span>
+            </article>
+            <article class="kpi-card">
+                <span class="kpi-label">Total Escalation Count</span>
+                <span class="kpi-value" th:text="${analytics != null ? analytics.totalEscalationCount : 0}">0</span>
+                <span class="kpi-note" th:text="${fleetAnalytics.dominantEscalationLabel != null ? #strings.replace(fleetAnalytics.dominantEscalationLabel, '_', ' ') : 'No escalation leader'}">No escalation leader</span>
+            </article>
+            <article class="kpi-card">
+                <span class="kpi-label">Total Distance</span>
+                <span class="kpi-value" th:text="${analytics != null ? #numbers.formatDecimal(analytics.totalDistanceKm, 1, 1) : '0.0'}">0.0</span>
+                <span class="kpi-note">Kilometers</span>
+            </article>
+        </section>
+
+        <section class="fleet-main-grid" aria-label="Main analytics charts">
+            <article class="dashboard-panel fleet-score-panel" data-fleet-score-panel aria-labelledby="fleet-score-trend-title" tabindex="0">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="fleet-score-trend-title">Score Trend</h2>
+                    </div>
+                    <button class="fleet-score-close" type="button" data-fleet-score-close aria-label="Minimize score trend">X</button>
+                    <span class="panel-total" th:text="${analytics != null && analytics.scoreTrend != null ? analytics.scoreTrend.size() + ' sessions' : '0 sessions'}">0 sessions</span>
+                </div>
+                <div class="driver-line-chart"
+                     th:if="${analytics != null && analytics.scoreTrend != null && !analytics.scoreTrend.isEmpty()}"
+                     data-fleet-score-chart
+                     aria-label="Fleet score trend chart">
+                    <div class="chart-stage" data-fleet-chart-stage></div>
+                    <div class="chart-point-data" hidden>
+                        <span th:each="point : ${analytics.scoreTrend}"
+                              data-fleet-trend-point
+                              th:attr="data-score=${point.averageScore},data-session-id=${point.sessionId},data-driver-id=${point.driverId},data-driver-name=${point.driverName},data-label=${point.timestamp},data-href=@{/admin/sessions/{id}(id=${point.sessionId},returnTo='/admin/fleet-analytics')}"></span>
+                    </div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.scoreTrend == null || analytics.scoreTrend.isEmpty()}">
+                    No persisted sessions are available for score trend.
+                </div>
+            </article>
+
+            <article class="dashboard-panel fleet-outcome-panel" aria-labelledby="fleet-outcomes-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="fleet-outcomes-title">Session Outcome Share</h2>
+                    </div>
+                </div>
+                <div class="fleet-ratio-stack" th:if="${analytics != null}">
+                    <div class="fleet-ratio-block">
+                        <div class="fleet-ratio-header">
+                            <strong>Validity</strong>
+                            <span th:text="${analytics.totalSessions > 0 ? #numbers.formatDecimal((analytics.validSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '% valid' : 'No session base'}">0% valid</span>
+                        </div>
+                        <div class="fleet-ratio-track" aria-hidden="true">
+                            <span class="fleet-ratio-fill success" th:style="${analytics.totalSessions > 0 ? 'width:' + #numbers.formatDecimal((analytics.validSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '%' : 'width:0%'}"></span>
+                        </div>
+                        <div class="fleet-ratio-legend">
+                            <span th:text="${analytics.validSessionCount + ' valid'}">0 valid</span>
+                            <span th:text="${analytics.invalidSessionCount + ' invalid'}">0 invalid</span>
+                        </div>
+                    </div>
+                    <div class="fleet-ratio-block">
+                        <div class="fleet-ratio-header">
+                            <strong>Completion</strong>
+                            <span th:text="${analytics.totalSessions > 0 ? #numbers.formatDecimal((analytics.completedSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '% completed' : 'No session base'}">0% completed</span>
+                        </div>
+                        <div class="fleet-ratio-track" aria-hidden="true">
+                            <span class="fleet-ratio-fill info" th:style="${analytics.totalSessions > 0 ? 'width:' + #numbers.formatDecimal((analytics.completedSessionCount * 100.0) / analytics.totalSessions, 1, 0) + '%' : 'width:0%'}"></span>
+                        </div>
+                        <div class="fleet-ratio-legend">
+                            <span th:text="${analytics.completedSessionCount + ' completed'}">0 completed</span>
+                            <span th:text="${analytics.abortedSessionCount + ' aborted'}">0 aborted</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel mix-panel" aria-labelledby="fleet-events-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="fleet-events-title">Grouped Event Counts</h2>
+                    </div>
+                    <span class="panel-total" th:text="${analytics != null ? analytics.totalEventCount + ' events' : '0 events'}">0 events</span>
+                </div>
+                <div class="fleet-pie-chart"
+                     data-fleet-pie-chart
+                     th:if="${analytics != null && analytics.eventCounts != null && !analytics.eventCounts.isEmpty() && analytics.totalEventCount > 0}">
+                    <div class="fleet-pie-figure" data-fleet-pie-figure aria-hidden="true"></div>
+                    <div class="fleet-pie-data" hidden>
+                        <span th:each="event : ${analytics.eventCounts}"
+                              data-fleet-pie-slice
+                              th:if="${event.count > 0}"
+                              th:attr="data-label=${#strings.replace(event.eventType.name(), '_', ' ')},data-count=${event.count},data-total=${analytics.totalEventCount}"></span>
+                    </div>
+                    <div class="fleet-pie-legend" data-fleet-pie-legend></div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.eventCounts == null || analytics.eventCounts.isEmpty() || analytics.totalEventCount == 0}">
+                    No grouped event data is available.
+                </div>
+            </article>
+
+            <article class="dashboard-panel mix-panel" aria-labelledby="fleet-escalations-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="fleet-escalations-title">Grouped Escalation Counts</h2>
+                    </div>
+                    <span class="panel-total warning" th:text="${analytics != null ? analytics.totalEscalationCount + ' escalations' : '0 escalations'}">0 escalations</span>
+                </div>
+                <div class="fleet-pie-chart"
+                     data-fleet-pie-chart
+                     th:if="${analytics != null && analytics.escalationCounts != null && !analytics.escalationCounts.isEmpty() && analytics.totalEscalationCount > 0}">
+                    <div class="fleet-pie-figure" data-fleet-pie-figure aria-hidden="true"></div>
+                    <div class="fleet-pie-data" hidden>
+                        <span th:each="escalation : ${analytics.escalationCounts}"
+                              data-fleet-pie-slice
+                              th:if="${escalation.count > 0}"
+                              th:attr="data-label=${#strings.replace(escalation.escalationType.name(), '_', ' ')},data-count=${escalation.count},data-total=${analytics.totalEscalationCount}"></span>
+                    </div>
+                    <div class="fleet-pie-legend" data-fleet-pie-legend></div>
+                </div>
+                <div class="empty-panel refined-empty" th:if="${analytics == null || analytics.escalationCounts == null || analytics.escalationCounts.isEmpty() || analytics.totalEscalationCount == 0}">
+                    No grouped escalation data is available.
+                </div>
+            </article>
+        </section>
+
+        <section class="fleet-insight-grid" aria-label="Insights">
+            <article class="dashboard-panel fleet-insight-panel" aria-labelledby="fleet-insights-title">
+                <div class="panel-header refined">
+                    <div>
+                        <h2 class="panel-title" id="fleet-insights-title">Derived Callouts</h2>
+                    </div>
+                </div>
+                <div class="fleet-insight-cards">
+                    <article class="fleet-insight-card">
+                        <span class="fleet-insight-label">Invalid rate</span>
+                        <strong th:text="${#numbers.formatDecimal(fleetAnalytics.invalidSessionRate, 1, 1) + '%'}">0.0%</strong>
+                    </article>
+                    <article class="fleet-insight-card">
+                        <span class="fleet-insight-label">Completed rate</span>
+                        <strong th:text="${#numbers.formatDecimal(fleetAnalytics.completedSessionRate, 1, 1) + '%'}">0.0%</strong>
+                    </article>
+                    <article class="fleet-insight-card">
+                        <span class="fleet-insight-label">Dominant grouped event</span>
+                        <strong th:text="${fleetAnalytics.dominantEventLabel != null ? #strings.replace(fleetAnalytics.dominantEventLabel, '_', ' ') : 'No event leader'}">No event leader</strong>
+                    </article>
+                    <article class="fleet-insight-card">
+                        <span class="fleet-insight-label">Dominant escalation</span>
+                        <strong th:text="${fleetAnalytics.dominantEscalationLabel != null ? #strings.replace(fleetAnalytics.dominantEscalationLabel, '_', ' ') : 'No escalation leader'}">No escalation leader</strong>
+                    </article>
+                </div>
+            </article>
+        </section>
+
+        <section class="dashboard-zero-state" th:if="${analytics != null && analytics.totalSessions == 0 && analytics.totalEventCount == 0 && analytics.totalEscalationCount == 0}">
+            <h2>No historical analytics yet</h2>
+            <p th:text="${fleetAnalytics.emptyStateMessage}">Fleet analytics appear after historical uploads create drivers, vehicles, and sessions in scope.</p>
+        </section>
+    </section>
+
+    <section class="drivers-state drivers-error" th:if="${fleetAnalytics.hasError}">
+        <h2>Fleet analytics could not be loaded</h2>
+        <p th:text="${fleetAnalytics.errorMessage}">Fleet analytics could not be loaded. Retry the request or return to the dashboard.</p>
+        <div class="session-shortcut-actions">
+            <a class="shell-button primary" th:href="@{/admin/fleet-analytics(fromTimestamp=${fleetAnalytics.fromTimestamp},toTimestamp=${fleetAnalytics.toTimestamp})}" href="/admin/fleet-analytics">Retry</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Profile', 'Authenticated admin identity and account shortcuts.', 'profile', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions"></div>
+
+<main>
+    <section class="profile-page" aria-labelledby="profile-page-heading" data-profile-page>
+
+        <!-- ── Hero / identity panel ─────────────────────────────── -->
+        <div class="profile-hero">
+            <div class="profile-hero-left">
+                <div class="profile-avatar-large" aria-hidden="true"
+                     th:text="${adminUsername != null ? adminUsername.substring(0, T(java.lang.Math).min(adminUsername.length(), 2)).toUpperCase() : 'AD'}">AD</div>
+                <div class="profile-hero-copy">
+                    <p class="profile-hero-kicker">Signed-in admin account</p>
+                    <h2 class="profile-hero-username" id="profile-page-heading"
+                        th:text="${adminUsername ?: 'Admin'}">Admin</h2>
+                    <p class="profile-hero-id" th:if="${adminId != null}">
+                        <span class="profile-id-label">ID</span>
+                        <span th:text="${adminId}">admin-uuid</span>
+                    </p>
+                </div>
+            </div>
+            <div class="profile-hero-badges">
+                <span class="status-pill"
+                      th:text="${adminRole != null ? adminRole.name() : 'ADMIN'}">ADMIN</span>
+                <span class="status-pill"
+                      th:classappend="${adminAccountStatus != null && adminAccountStatus.name() == 'ACTIVE'} ? ' success' : (${adminAccountStatus != null && adminAccountStatus.name() == 'SUSPENDED'} ? ' warning' : (${adminAccountStatus != null && (adminAccountStatus.name() == 'INACTIVE' || adminAccountStatus.name() == 'DEACTIVATED')} ? ' danger' : ''))"
+                      th:text="${adminAccountStatus != null ? adminAccountStatus.name() : 'ACTIVE'}">ACTIVE</span>
+            </div>
+        </div>
+
+        <!-- ── Account status explanation ─────────────────────────── -->
+        <div class="profile-status-banner profile-status-banner-warning"
+             th:if="${adminAccountStatus != null && adminAccountStatus.name() == 'SUSPENDED'}" role="alert">
+            <span class="profile-status-banner-icon" aria-hidden="true">&#9888;</span>
+            <span>This account is currently <strong>suspended</strong>. Some capabilities may be restricted. Contact a system administrator for assistance.</span>
+        </div>
+        <div class="profile-status-banner profile-status-banner-danger"
+             th:if="${adminAccountStatus != null && (adminAccountStatus.name() == 'INACTIVE' || adminAccountStatus.name() == 'DEACTIVATED')}" role="alert">
+            <span class="profile-status-banner-icon" aria-hidden="true">&#9888;</span>
+            <span>This account is <strong th:text="${adminAccountStatus.name().toLowerCase()}">inactive</strong>. Contact a system administrator if this is unexpected.</span>
+        </div>
+
+        <!-- ── Success toast ─────────────────────────────────────── -->
+        <div class="profile-toast profile-toast-success" id="profile-toast-success" hidden role="status" aria-live="polite">
+            <span class="profile-toast-icon" aria-hidden="true">&#10003;</span>
+            <span>Password changed successfully.</span>
+        </div>
+
+        <!-- ── Error toast ───────────────────────────────────────── -->
+        <div class="profile-toast profile-toast-error" id="profile-toast-error" hidden role="alert" aria-live="assertive">
+            <span class="profile-toast-icon" aria-hidden="true">&#9888;</span>
+            <span id="profile-error-message">Failed to change password. Please try again.</span>
+        </div>
+
+        <!-- ── Account metadata section ──────────────────────────── -->
+        <section class="profile-section" aria-labelledby="profile-meta-title">
+            <header class="profile-section-header">
+                <div class="profile-section-icon" aria-hidden="true">&#128337;</div>
+                <div>
+                    <h3 class="profile-section-title" id="profile-meta-title">Account Timeline</h3>
+                    <p class="profile-section-sub">Timestamps associated with this admin account, formatted in your local time zone.</p>
+                </div>
+            </header>
+            <div class="profile-meta-grid">
+                <div class="profile-meta-item">
+                    <span class="profile-meta-label">Created</span>
+                    <span class="profile-meta-value" data-profile-epoch
+                          th:attr="data-epoch=${adminCreatedAt}"
+                          th:text="${adminCreatedAt}">—</span>
+                </div>
+                <div class="profile-meta-item">
+                    <span class="profile-meta-label">Last Updated</span>
+                    <span class="profile-meta-value" data-profile-epoch
+                          th:attr="data-epoch=${adminUpdatedAt}"
+                          th:text="${adminUpdatedAt}">—</span>
+                </div>
+                <div class="profile-meta-item">
+                    <span class="profile-meta-label">Last Login</span>
+                    <span class="profile-meta-value" data-profile-epoch
+                          th:attr="data-epoch=${adminLastLoginAt}"
+                          th:text="${adminLastLoginAt != null ? adminLastLoginAt : 'Never'}">Never</span>
+                </div>
+                <div class="profile-meta-item" th:if="${adminDeactivatedAt != null}">
+                    <span class="profile-meta-label">Deactivated</span>
+                    <span class="profile-meta-value profile-meta-value-danger" data-profile-epoch
+                          th:attr="data-epoch=${adminDeactivatedAt}"
+                          th:text="${adminDeactivatedAt}">—</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Password change section ───────────────────────────── -->
+        <section class="profile-section" aria-labelledby="profile-password-title">
+            <header class="profile-section-header">
+                <div class="profile-section-icon" aria-hidden="true">&#128274;</div>
+                <div>
+                    <h3 class="profile-section-title" id="profile-password-title">Change Password</h3>
+                    <p class="profile-section-sub">Update your admin account password. You will need to provide your current password for verification.</p>
+                </div>
+            </header>
+            <form class="profile-password-form" id="profile-password-form" autocomplete="off" novalidate>
+                <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-current-password">Current Password</label>
+                    <div class="profile-input-wrap">
+                        <input class="profile-input" type="password" id="profile-current-password"
+                               name="currentPassword" autocomplete="current-password" required
+                               placeholder="Enter current password">
+                        <button class="profile-visibility-toggle" type="button"
+                                aria-label="Show current password" data-toggle-password="profile-current-password">
+                            <span class="toggle-eye" aria-hidden="true">&#128065;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-new-password">New Password</label>
+                    <div class="profile-input-wrap">
+                        <input class="profile-input" type="password" id="profile-new-password"
+                               name="newPassword" autocomplete="new-password" required
+                               placeholder="Enter new password">
+                        <button class="profile-visibility-toggle" type="button"
+                                aria-label="Show new password" data-toggle-password="profile-new-password">
+                            <span class="toggle-eye" aria-hidden="true">&#128065;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-form-group">
+                    <label class="profile-form-label" for="profile-confirm-password">Confirm New Password</label>
+                    <div class="profile-input-wrap">
+                        <input class="profile-input" type="password" id="profile-confirm-password"
+                               name="confirmNewPassword" autocomplete="new-password" required
+                               placeholder="Re-enter new password">
+                        <button class="profile-visibility-toggle" type="button"
+                                aria-label="Show confirm password" data-toggle-password="profile-confirm-password">
+                            <span class="toggle-eye" aria-hidden="true">&#128065;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-form-validation" id="profile-form-validation" hidden role="alert">
+                    <span id="profile-validation-message"></span>
+                </div>
+                <div class="profile-form-actions">
+                    <button class="profile-submit-btn" type="submit" id="profile-submit-btn">
+                        <span class="profile-submit-label">Change Password</span>
+                        <span class="profile-submit-spinner" aria-hidden="true" hidden></span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ── Account actions section ───────────────────────────── -->
+        <section class="profile-section profile-section-actions" aria-labelledby="profile-actions-title">
+            <header class="profile-section-header">
+                <div class="profile-section-icon" aria-hidden="true">&#9881;</div>
+                <div>
+                    <h3 class="profile-section-title" id="profile-actions-title">Account Actions</h3>
+                    <p class="profile-section-sub">Session and access controls for your admin account.</p>
+                </div>
+            </header>
+            <div class="profile-actions-body">
+                <div class="profile-action-row">
+                    <div class="profile-action-info">
+                        <span class="profile-action-name">Sign Out</span>
+                        <span class="profile-action-desc">End your current session and return to the login page.</span>
+                    </div>
+                    <form class="logout-form" method="post" th:action="@{/admin/logout}" action="/admin/logout">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button class="profile-logout-btn" type="submit" id="profile-logout-btn">Log Out</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+    </section>
+</main>
+</body>
+</html>

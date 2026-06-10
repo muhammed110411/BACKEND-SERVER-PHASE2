@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${vehicleForm.editMode ? 'Edit Vehicle' : 'New Vehicle'}, '', 'vehicles', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button" th:href="@{/admin/vehicles}" href="/admin/vehicles">Back to vehicles</a>
+</div>
+
+<main>
+    <section class="shell-card" aria-labelledby="vehicle-form-title">
+        <h2 class="shell-card-title" id="vehicle-form-title" th:text="${vehicleForm.editMode} ? 'Edit vehicle' : 'Create vehicle'">Vehicle form</h2>
+        <form class="page-grid" method="post" action="#" style="margin-top: 20px;">
+            <div class="filter-field">
+                <label for="vehicle-name">Display name</label>
+                <input id="vehicle-name" name="displayName" type="text" th:value="${vehicleForm.vehicle != null ? vehicleForm.vehicle.displayName : ''}">
+            </div>
+            <button class="shell-button primary" type="submit">Save vehicle</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

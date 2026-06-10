@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell('Settings', 'Personalise the admin interface â€” theme, display density, and browsing preferences.', 'settings', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions"></div>
+
+<main>
+    <section class="settings-page" aria-labelledby="settings-page-heading" data-settings-page>
+
+        <!-- â”€â”€ Page hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="settings-hero">
+            <div class="settings-hero-copy">
+                <p class="settings-hero-kicker" data-i18n="settings.kicker">Interface preferences</p>
+                <h2 class="settings-hero-title" id="settings-page-heading" data-i18n="settings.title">Settings</h2>
+                <p class="settings-hero-sub" data-i18n="settings.localNote">These preferences are stored locally in your browser and never affect business data or backend logic.</p>
+            </div>
+            <div class="settings-hero-badge" aria-hidden="true">
+                <span class="settings-hero-icon">&#9881;</span>
+            </div>
+        </div>
+
+        <!-- â”€â”€ Unsaved-changes banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="settings-dirty-banner" id="settings-dirty-banner" hidden aria-live="polite">
+            <span class="settings-dirty-dot" aria-hidden="true"></span>
+            <span data-i18n="settings.unsaved">You have unsaved changes</span>
+        </div>
+
+        <!-- â”€â”€ Success toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="settings-toast settings-toast-success" id="settings-toast-success" hidden role="status" aria-live="polite">
+            <span class="settings-toast-icon" aria-hidden="true">&#10003;</span>
+            <span data-i18n="settings.saved">Settings saved successfully</span>
+        </div>
+
+        <!-- â”€â”€ Error toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="settings-toast settings-toast-error" id="settings-toast-error" hidden role="alert" aria-live="assertive">
+            <span class="settings-toast-icon" aria-hidden="true">&#9888;</span>
+            <span data-i18n="settings.failed">Failed to save settings. Please try again.</span>
+        </div>
+
+        <!-- â”€â”€ Settings body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="settings-body">
+
+            <!-- Left: section nav -->
+            <nav class="settings-subnav" aria-label="Settings sections">
+                <a class="settings-subnav-item is-active" href="#section-appearance" id="subnav-appearance">
+                    <span class="subnav-dot" aria-hidden="true"></span>
+                    <span data-i18n="settings.appearance">Appearance</span>
+                </a>
+                <a class="settings-subnav-item" href="#section-display" id="subnav-display">
+                    <span class="subnav-dot" aria-hidden="true"></span>
+                    <span data-i18n="settings.display">Display</span>
+                </a>
+                <a class="settings-subnav-item" href="#section-browsing" id="subnav-browsing">
+                    <span class="subnav-dot" aria-hidden="true"></span>
+                    <span data-i18n="settings.browsing">Browsing Preferences</span>
+                </a>
+            </nav>
+
+            <!-- Right: settings panels -->
+            <div class="settings-panels">
+
+                <!-- â”€â”€ 1. Appearance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <section class="settings-section" id="section-appearance" aria-labelledby="section-appearance-title">
+                    <header class="settings-section-header">
+                        <div class="settings-section-icon" aria-hidden="true">&#9680;</div>
+                        <div>
+                            <h3 class="settings-section-title" id="section-appearance-title" data-i18n="settings.appearance">Appearance</h3>
+                            <p class="settings-section-sub" data-i18n="settings.appearanceHelp">Control the visual theme and interface language.</p>
+                        </div>
+                    </header>
+
+                    <!-- Theme -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" id="label-theme" data-i18n="settings.theme">Theme</label>
+                            <p class="settings-help" data-i18n="settings.themeHelp">Choose between dark, light, or system-matched appearance.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <fieldset class="seg-control" aria-labelledby="label-theme" data-setting="theme">
+                                <legend class="sr-only" data-i18n="settings.theme">Theme</legend>
+                                <button type="button" class="seg-btn is-active" data-value="dark" aria-pressed="true" id="theme-dark" data-i18n="settings.dark">Dark</button>
+                                <button type="button" class="seg-btn" data-value="light" aria-pressed="false" id="theme-light" data-i18n="settings.light">Light</button>
+                                <button type="button" class="seg-btn" data-value="system" aria-pressed="false" id="theme-system" data-i18n="settings.system">System</button>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <!-- Language -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" for="setting-language" data-i18n="settings.language">Language</label>
+                            <p class="settings-help" data-i18n="settings.languageHelp">Choose the admin interface language.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <div class="settings-select-wrap">
+                                <select class="settings-select" id="setting-language" data-setting="language">
+                                    <option value="en">English</option>
+                                    <option value="tr">Türkçe</option>
+                                </select>
+                                <span class="settings-select-caret" aria-hidden="true">&#9660;</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- â”€â”€ 2. Display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <section class="settings-section" id="section-display" aria-labelledby="section-display-title">
+                    <header class="settings-section-header">
+                        <div class="settings-section-icon" aria-hidden="true">&#9638;</div>
+                        <div>
+                            <h3 class="settings-section-title" id="section-display-title" data-i18n="settings.display">Display</h3>
+                            <p class="settings-section-sub" data-i18n="settings.displayHelp">Adjust spacing in data-heavy views.</p>
+                        </div>
+                    </header>
+
+                    <!-- Table density -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" id="label-table-density" data-i18n="settings.tableDensity">Table Density</label>
+                            <p class="settings-help" data-i18n="settings.tableDensityHelp">Controls row height and padding in tables.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <fieldset class="seg-control" aria-labelledby="label-table-density" data-setting="tableDensity">
+                                <legend class="sr-only" data-i18n="settings.tableDensity">Table Density</legend>
+                                <button type="button" class="seg-btn" data-value="compact" aria-pressed="false" id="table-density-compact" data-i18n="settings.compact">Compact</button>
+                                <button type="button" class="seg-btn is-active" data-value="balanced" aria-pressed="true" id="table-density-balanced" data-i18n="settings.balanced">Balanced</button>
+                                <button type="button" class="seg-btn" data-value="comfortable" aria-pressed="false" id="table-density-comfortable" data-i18n="settings.comfortable">Comfortable</button>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <!-- Chart density -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" id="label-chart-density" data-i18n="settings.chartDensity">Chart Density</label>
+                            <p class="settings-help" data-i18n="settings.chartDensityHelp">Adjusts spacing inside chart panels.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <fieldset class="seg-control" aria-labelledby="label-chart-density" data-setting="chartDensity">
+                                <legend class="sr-only" data-i18n="settings.chartDensity">Chart Density</legend>
+                                <button type="button" class="seg-btn" data-value="compact" aria-pressed="false" id="chart-density-compact" data-i18n="settings.compact">Compact</button>
+                                <button type="button" class="seg-btn is-active" data-value="balanced" aria-pressed="true" id="chart-density-balanced" data-i18n="settings.balanced">Balanced</button>
+                                <button type="button" class="seg-btn" data-value="spacious" aria-pressed="false" id="chart-density-spacious" data-i18n="settings.spacious">Spacious</button>
+                            </fieldset>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- â”€â”€ 3. Browsing Preferences â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <section class="settings-section" id="section-browsing" aria-labelledby="section-browsing-title">
+                    <header class="settings-section-header">
+                        <div class="settings-section-icon" aria-hidden="true">&#9783;</div>
+                        <div>
+                            <h3 class="settings-section-title" id="section-browsing-title" data-i18n="settings.browsing">Browsing Preferences</h3>
+                            <p class="settings-section-sub" data-i18n="settings.browsingHelp">Set default behavior for admin navigation.</p>
+                        </div>
+                    </header>
+
+                    <!-- Default Drivers view -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" id="label-drivers-view" data-i18n="settings.defaultDriversView">Default Drivers View</label>
+                            <p class="settings-help" data-i18n="settings.defaultDriversViewHelp">Determines which mode the Drivers page opens in. You can still switch modes from within the Drivers page.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <fieldset class="seg-control" aria-labelledby="label-drivers-view" data-setting="driversDefaultView">
+                                <legend class="sr-only" data-i18n="settings.defaultDriversView">Default Drivers View</legend>
+                                <button type="button" class="seg-btn is-active" data-value="list" aria-pressed="true" id="drivers-view-list" data-i18n="settings.listView">List View</button>
+                                <button type="button" class="seg-btn" data-value="grid" aria-pressed="false" id="drivers-view-grid" data-i18n="settings.cardGrid">Card Grid</button>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar collapsed by default -->
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <label class="settings-label" for="toggle-sidebar-collapsed" data-i18n="settings.compactSidebar">Start with Compact Sidebar</label>
+                            <p class="settings-help" data-i18n="settings.compactSidebarHelp">When enabled, the sidebar opens in a narrower icon-only state on page load.</p>
+                        </div>
+                        <div class="settings-row-control">
+                            <button type="button"
+                                    class="settings-toggle"
+                                    id="toggle-sidebar-collapsed"
+                                    role="switch"
+                                    aria-checked="false"
+                                    data-setting="sidebarCollapsed">
+                                <span class="toggle-track" aria-hidden="true">
+                                    <span class="toggle-thumb"></span>
+                                </span>
+                                <span class="toggle-label-text sr-only" data-i18n="settings.compactSidebar">Start with Compact Sidebar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- â”€â”€ Save / Reset area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+                <div class="settings-actions">
+                    <div class="settings-actions-left">
+                        <button type="button" class="settings-reset-btn" id="settings-reset-btn">
+                            <span data-i18n="settings.reset">Reset to Defaults</span>
+                        </button>
+                    </div>
+                    <div class="settings-actions-right">
+                        <button type="button" class="settings-save-btn" id="settings-save-btn" disabled>
+                            <span class="save-btn-label" data-i18n="settings.save">Save Changes</span>
+                            <span class="save-btn-spinner" aria-hidden="true" hidden></span>
+                        </button>
+                    </div>
+                </div>
+
+            </div><!-- /settings-panels -->
+        </div><!-- /settings-body -->
+
+    </section>
+</main>
+</body>
+</html>

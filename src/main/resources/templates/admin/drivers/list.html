@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/fragments/shell :: shell(${driverList.pageTitle}, '', 'drivers', ~{::main}, ~{::#route-actions})}">
+<body>
+<div id="route-actions">
+    <a class="shell-button primary" th:href="@{/admin/drivers/new}" href="/admin/drivers/new">Create driver</a>
+</div>
+
+<main>
+    <section class="drivers-page" aria-labelledby="drivers-title" data-drivers-page>
+        <header class="drivers-hero">
+            <div>
+                <h2 id="drivers-title">Drivers</h2>
+            </div>
+            <div class="drivers-hero-meter" aria-label="Driver count summary">
+                <span>Total drivers</span>
+                <strong data-total-count th:text="${driverList.totalDriverCount}">0</strong>
+            </div>
+        </header>
+
+        <form class="driver-control-bar" method="get" th:action="@{/admin/drivers}" data-driver-controls>
+            <div class="driver-search-field">
+                <label for="driver-search">Search drivers</label>
+                <input id="driver-search" name="search" type="search" th:value="${driverList.searchQuery}" placeholder="Search name, id, or email" data-driver-search>
+            </div>
+            <div class="driver-control-field">
+                <label for="driver-sort">Sort</label>
+                <select id="driver-sort" data-driver-sort>
+                    <option value="manual">Manual card order</option>
+                    <option value="name:asc" th:selected="${driverList.sortBy == 'name' && driverList.sortDirection == 'asc'}">Name A-Z</option>
+                    <option value="name:desc" th:selected="${driverList.sortBy == 'name' && driverList.sortDirection == 'desc'}">Name Z-A</option>
+                    <option value="longTermReliabilityScore:desc" th:selected="${driverList.sortBy == 'longTermReliabilityScore' && driverList.sortDirection == 'desc'}">Score high-low</option>
+                    <option value="longTermReliabilityScore:asc" th:selected="${driverList.sortBy == 'longTermReliabilityScore' && driverList.sortDirection == 'asc'}">Score low-high</option>
+                    <option value="totalSessions:desc" th:selected="${driverList.sortBy == 'totalSessions'}">Most sessions</option>
+                    <option value="totalDistanceKm:desc" th:selected="${driverList.sortBy == 'totalDistanceKm'}">Most distance</option>
+                </select>
+            </div>
+            <fieldset class="driver-mode-toggle" aria-label="View mode">
+                <legend>View mode</legend>
+                <button type="button" class="is-active" data-driver-mode="list" aria-pressed="true">List View</button>
+                <button type="button" data-driver-mode="grid" aria-pressed="false">Card Grid View</button>
+            </fieldset>
+            <input type="hidden" name="sortBy" th:value="${driverList.sortBy}" data-driver-sort-by>
+            <input type="hidden" name="direction" th:value="${driverList.sortDirection}" data-driver-sort-direction>
+        </form>
+
+        <div class="driver-context-strip" th:if="${driverList.drivers != null && !driverList.drivers.items.isEmpty()}">
+            <div><span>Showing</span><strong data-visible-count th:text="${driverList.drivers.items.size()}">0</strong></div>
+        </div>
+
+        <section class="driver-browse-area" th:if="${driverList.drivers != null && !driverList.drivers.items.isEmpty()}">
+            <div class="driver-list-mode" data-driver-list-mode>
+            <div class="driver-table-wrap">
+            <table class="driver-table">
+                <thead>
+                <tr>
+                    <th scope="col">Driver</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Reliability</th>
+                    <th scope="col">Sessions</th>
+                    <th scope="col">Distance</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <th:block th:each="driver : ${driverList.drivers.items}">
+                <tr data-driver-item
+                    th:attr="data-driver-id=${driver.driverId},data-driver-name=${driver.driverName},data-driver-email=${driver.email},data-driver-role=${driver.role},data-driver-status=${driver.accountStatus},data-driver-score=${driver.longTermReliabilityScore},data-driver-sessions=${driver.totalSessions},data-driver-distance=${driver.totalDistanceKm}">
+                    <td>
+                        <div class="driver-identity-cell">
+                            <span class="driver-avatar" th:text="${#strings.substring(driver.driverName, 0, 1)}">D</span>
+                            <span>
+                                <strong class="entity-link" th:text="${driver.driverName}">Driver</strong>
+                                <small th:text="${driver.driverId}">driver-id</small>
+                            </span>
+                        </div>
+                    </td>
+                    <td class="driver-email" th:text="${driver.email}">driver@example.com</td>
+                    <td><span class="role-pill" th:text="${driver.role}">DRIVER</span></td>
+                    <td>
+                        <span class="status-pill"
+                              th:classappend="${driver.accountStatus != null && driver.accountStatus.name() == 'ACTIVE'} ? ' success' : (${driver.accountStatus != null && driver.accountStatus.name() == 'SUSPENDED'} ? ' danger' : (${driver.accountStatus != null && driver.accountStatus.name() == 'INACTIVE'} ? ' warning' : ' muted'))"
+                              th:text="${driver.accountStatus}">ACTIVE</span>
+                    </td>
+                    <td>
+                        <div class="score-cell" th:classappend="${driver.longTermReliabilityScore >= 80} ? ' score-good' : (${driver.longTermReliabilityScore >= 60} ? ' score-medium' : ' score-bad')">
+                            <strong th:text="${#numbers.formatDecimal(driver.longTermReliabilityScore, 1, 1)}">0.0</strong>
+                            <span class="score-track"><span th:style="${'width:' + driver.longTermReliabilityScore + '%'}"></span></span>
+                        </div>
+                    </td>
+                    <td th:text="${driver.totalSessions}">0</td>
+                    <td th:text="${#numbers.formatDecimal(driver.totalDistanceKm, 1, 1) + ' km'}">0.0 km</td>
+                    <td>
+                        <div class="driver-actions">
+                            <button class="shell-button compact" type="button" data-driver-panel="details">Details</button>
+                            <button class="shell-button compact" type="button" data-driver-panel="analytics">Analytics</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="driver-inline-row" hidden data-driver-inline-row>
+                    <td colspan="8">
+                        <div class="driver-inline-panel" data-driver-inline-panel></div>
+                    </td>
+                </tr>
+                </th:block>
+                </tbody>
+            </table>
+            </div>
+            </div>
+
+            <div class="driver-grid-mode" hidden data-driver-grid-mode>
+                <div class="driver-card-grid" data-driver-grid>
+                    <article class="driver-card" tabindex="0" th:each="driver : ${driverList.drivers.items}"
+                             data-driver-item data-draggable-card
+                             th:attr="data-driver-id=${driver.driverId},data-driver-name=${driver.driverName},data-driver-email=${driver.email},data-driver-role=${driver.role},data-driver-status=${driver.accountStatus},data-driver-score=${driver.longTermReliabilityScore},data-driver-sessions=${driver.totalSessions},data-driver-distance=${driver.totalDistanceKm}">
+                        <div class="driver-card-top">
+                            <span class="driver-avatar large" th:text="${#strings.substring(driver.driverName, 0, 1)}">D</span>
+                        </div>
+                        <div class="driver-card-main">
+                            <h3 th:text="${driver.driverName}">Driver Name</h3>
+                            <p th:text="${driver.driverId}">driver-id</p>
+                            <p class="driver-card-email" th:text="${driver.email}">driver@example.com</p>
+                            <div class="driver-detail-badges">
+                                <span class="role-pill" th:text="${driver.role}">DRIVER</span>
+                                <span class="status-pill"
+                                      th:classappend="${driver.accountStatus != null && driver.accountStatus.name() == 'ACTIVE'} ? ' success' : (${driver.accountStatus != null && driver.accountStatus.name() == 'SUSPENDED'} ? ' danger' : (${driver.accountStatus != null && driver.accountStatus.name() == 'INACTIVE'} ? ' warning' : ' muted'))"
+                                      th:text="${driver.accountStatus}">ACTIVE</span>
+                            </div>
+                        </div>
+                        <div class="driver-card-score" th:classappend="${driver.longTermReliabilityScore >= 80} ? ' score-good' : (${driver.longTermReliabilityScore >= 60} ? ' score-medium' : ' score-bad')">
+                            <div>
+                                <span>Reliability</span>
+                                <strong th:text="${#numbers.formatDecimal(driver.longTermReliabilityScore, 1, 1)}">0.0</strong>
+                            </div>
+                            <span class="score-track"><span th:style="${'width:' + driver.longTermReliabilityScore + '%'}"></span></span>
+                        </div>
+                        <div class="driver-card-metrics">
+                            <div><span>Sessions</span><strong th:text="${driver.totalSessions}">0</strong></div>
+                            <div><span>Distance</span><strong th:text="${#numbers.formatDecimal(driver.totalDistanceKm, 1, 1) + ' km'}">0.0 km</strong></div>
+                        </div>
+                        <div class="driver-actions">
+                            <button class="shell-button compact" type="button" data-driver-panel="details">Details</button>
+                            <button class="shell-button compact" type="button" data-driver-panel="analytics">Analytics</button>
+                        </div>
+                        <div class="driver-card-panel" hidden data-driver-card-panel></div>
+                    </article>
+                </div>
+                <div class="driver-card-backdrop" hidden data-driver-card-backdrop></div>
+                <article class="driver-card-overlay" hidden data-driver-card-overlay aria-live="polite"></article>
+            </div>
+        </section>
+
+        <div class="drivers-state" hidden data-no-results>
+            <h3>No matching drivers</h3>
+            <p>Try a different search term or sort combination.</p>
+        </div>
+
+        <div class="drivers-state drivers-error" hidden data-driver-error>
+            <h3>Driver list could not be loaded</h3>
+            <p>The page structure is still available. Retry the request when the service is reachable.</p>
+            <a class="shell-button primary" th:href="@{/admin/drivers}" href="/admin/drivers">Retry</a>
+        </div>
+
+        <div class="drivers-state" th:if="${driverList.drivers == null || driverList.drivers.items.isEmpty()}">
+            <h3>No driver records yet</h3>
+            <p th:text="${driverList.emptyStateMessage}">No drivers matched the selected filters.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
