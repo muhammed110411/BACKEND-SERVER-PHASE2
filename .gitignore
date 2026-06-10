@@ -54,3 +54,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Codex / local temporary tooling ###
+.codex*/
+.codex-*/
+.g/
+.gradle-*/
+*.tmp
